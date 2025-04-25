@@ -1,0 +1,35 @@
+# Módulos e dependências
+node_modules
+
+# Arquivos temporários
+.DS_Store
+*.pem
+Thumbs.db
+
+# Arquivos de debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Arquivos de ambiente local
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env
+
+# Cache de build
+.cache
+
+# Arquivos de IDE
+.idea
+.vscode
+*.sublime-*
+*.swp
+*.swo
+
+# Arquivos específicos do projeto a ignorar
+README-dev.md
+prepare-vercel.js
+permutem-deploy.zip 

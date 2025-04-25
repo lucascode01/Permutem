@@ -1,0 +1,105 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #0071ce;
+  --secondary: #005fad;
+  --accent: #0071ce;
+  --text: #333333;
+  --color-background: #f9fafb;
+}
+
+.container-center {
+  @apply container mx-auto px-4 max-w-6xl;
+}
+
+.btn {
+  @apply px-4 py-2 rounded transition-colors;
+}
+
+.btn-primary {
+  @apply bg-[#0071ce] text-white hover:bg-opacity-90;
+}
+
+.btn-outline {
+  @apply border border-[#0071ce] text-[#0071ce] hover:bg-[#0071ce] hover:text-white;
+}
+
+.btn-secondary {
+  @apply bg-secondary text-white hover:bg-secondary/90;
+}
+
+.text-hero {
+  @apply text-4xl md:text-5xl lg:text-6xl font-bold;
+}
+
+.text-subtitle {
+  @apply text-lg md:text-xl;
+}
+
+@layer base {
+  html {
+    @apply text-text;
+  }
+  body {
+    @apply bg-gray-50;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold;
+  }
+}
+
+@layer components {
+  .bg-primary {
+    background-color: var(--primary);
+  }
+  .bg-secondary {
+    background-color: var(--secondary);
+  }
+  .bg-accent {
+    background-color: var(--accent);
+  }
+  .text-primary {
+    color: var(--primary);
+  }
+  .text-secondary {
+    color: var(--secondary);
+  }
+  .text-text {
+    color: var(--text);
+  }
+
+  .btn {
+    @apply px-6 py-3 rounded-md font-semibold transition-all duration-300;
+  }
+
+  .btn-accent {
+    @apply bg-accent text-text hover:bg-opacity-90;
+  }
+}
+
+/* Animação para o slider */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+/* Sobrescrever classes especificas para admin */
+#admin-layout {
+  padding-top: 1rem !important;
+}
+
+/* Restaurar padding padrao para outros elementos */
+.pt-20:not(#admin-layout) {
+  padding-top: 5rem;
+} 

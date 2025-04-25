@@ -1,0 +1,9 @@
+/* Sobrescrever classes especificas para admin */
+#admin-layout {
+  padding-top: 1rem !important;
+}
+ 
+/* Restaurar padding padrao para outros elementos */
+.pt-20:not(#admin-layout) {
+  padding-top: 5rem;
+} 
