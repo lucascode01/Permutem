@@ -2,7 +2,7 @@
 
 ## Sobre o Projeto
 
-Permutem é uma plataforma de permuta de imóveis, onde proprietários e corretores podem anunciar seus imóveis e encontrar oportunidades de troca. O projeto utiliza tecnologias modernas como Next.js e Tailwind CSS para oferecer uma experiência de usuário fluida e responsiva.
+Permutem é uma plataforma de permuta de imóveis, onde proprietários e corretores podem anunciar seus imóveis e encontrar oportunidades de troca.
 
 ## Configuração do Ambiente
 
@@ -14,7 +14,7 @@ Permutem é uma plataforma de permuta de imóveis, onde proprietários e correto
 
 ```bash
 # Clone o repositório
-git clone https://github.com/GouveiaZx/permutem.git
+git clone [URL do repositório]
 
 # Entre na pasta do projeto
 cd permutem
@@ -28,37 +28,13 @@ npm run dev
 
 O site estará disponível em `http://localhost:3000`
 
-## Deploy na Vercel
-
-O projeto está preparado para ser implantado na Vercel:
-
-```bash
-# Preparar o projeto para deploy (opcional)
-node prepare-vercel.js
-
-# Ou fazer deploy diretamente do GitHub
-# 1. Conecte sua conta GitHub à Vercel
-# 2. Selecione o repositório "permutem"
-# 3. Configure as variáveis de ambiente (se necessário)
-# 4. Clique em "Deploy"
-```
-
 ## Situação Atual
 
 ### Modo de Demonstração
 
 Atualmente, a aplicação está configurada para funcionar com **dados mockados** para desenvolvimento, enquanto o backend com Supabase não estiver totalmente configurado.
 
-### Funcionalidades Implementadas
-
-- ✅ Landing page completa
-- ✅ Sistema de login e cadastro
-- ✅ Recuperação de senha
-- ✅ Dashboard do usuário
-- ✅ Busca de imóveis
-- ✅ Favoritos e sugestões
-- ✅ Página de anúncios do usuário
-- ✅ Perfil do usuário
+Os erros 404 relacionados ao Supabase são esperados neste momento, já que a aplicação está configurada para usar os dados de demonstração locais.
 
 ### Corrigindo Erros Comuns
 
@@ -77,12 +53,10 @@ Correção dos avisos de imagem:
 
 ## Tecnologias Utilizadas
 
-- **Frontend**: Next.js 13.5 (React 18)
+- **Frontend**: Next.js (React)
 - **Estilização**: Tailwind CSS
-- **Ícones**: React Icons, Heroicons, Lucide
 - **Backend** (futuramente): Supabase
 - **Gerenciamento de Estado**: React Context API
-- **Deploy**: Vercel
 
 ## Estrutura do Projeto
 
@@ -92,38 +66,29 @@ Correção dos avisos de imagem:
 - `app/lib/`: Utilitários e funções de API
 - `public/images/`: Recursos estáticos
 
-## Fluxos Principais
+## Componentes Principais
 
-### Autenticação
-1. Usuário se registra ou faz login
-2. Em caso de senha esquecida, utiliza o fluxo de recuperação
-3. Após autenticação, é redirecionado para o dashboard
-
-### Permuta de Imóveis
-1. Usuário cadastra seu imóvel
-2. Visualiza sugestões compatíveis
-3. Envia propostas de permuta para imóveis de interesse
-4. Gerencia propostas recebidas e enviadas
-
-## Documentação
-
-Para documentação mais detalhada, consulte:
-- [documentacao.md](./documentacao.md) - Documentação técnica e de arquitetura
-- Comentários no código-fonte em componentes principais
+- **Navbar**: Navegação principal do site
+- **HeroSection**: Banner principal com carrossel e busca
+- **FeaturedProperties**: Imóveis em destaque
+- **HowItWorks**: Explicação do funcionamento
+- **NewsSection**: Carrossel de cidades
+- **CtaSection**: Chamada para ação
+- **Footer**: Rodapé com informações
 
 ## Próximos Passos
 
 1. Configuração completa do Supabase
-2. Implementação de pagamentos para assinaturas
-3. Melhorias no algoritmo de sugestões
-4. Dashboard administrativo
-5. Aplicativo móvel (React Native)
+2. Implementação de autenticação de usuários
+3. Desenvolvimento de páginas de detalhes do imóvel
+4. Sistema de propostas de permuta
+5. Dashboard do usuário
 
 ## Contato
 
-Desenvolvido por: [Seu Nome]
-GitHub: [GouveiaZx](https://github.com/GouveiaZx)
+Empresa: Imobiliária Soares e Oliveira Ltda  
+CNPJ: 14.576.916/0001-07
 
 ---
 
-**Última atualização**: Maio de 2024 
+**Última atualização**: [Data Atual] 

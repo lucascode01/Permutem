@@ -16,7 +16,7 @@ const DynamicHeader = () => {
 
   // Verificar se estamos em uma página pública (home, como-funciona, ajuda)
   const isPublicPage = ['/', '/como-funciona', '/ajuda'].includes(pathname);
-  
+
   // Verificar se estamos na página de detalhe do imóvel
   const isPropertyDetailPage = pathname.startsWith('/imovel/');
 

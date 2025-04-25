@@ -1,8 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false,
-  // Vercel já otimiza o build, então não precisamos do standalone
-  // output: 'standalone',
   images: {
     remotePatterns: [
       {

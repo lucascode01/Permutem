@@ -6,11 +6,10 @@ Permutem é uma plataforma de permuta de imóveis que permite aos usuários anun
 ## Estrutura do Projeto
 
 ### Tecnologias Principais
-- **Next.js 13.5** - Framework React com App Router
+- **Next.js** - Framework React com App Router
 - **Tailwind CSS** - Framework de estilo
 - **React Icons** - Biblioteca de ícones
 - **Autenticação** - Simulada via Context API (preparada para integração com Supabase)
-- **Heroicons/Lucide** - Biblioteca de ícones para a interface
 
 ### Estrutura de Diretórios
 
@@ -27,8 +26,6 @@ app/
 ├── dashboard/             # Dashboard do usuário
 ├── login/                 # Página de login
 ├── cadastro/              # Página de cadastro
-├── recuperar-senha/       # Recuperação de senha
-├── redefinir-senha/       # Redefinição de senha com token
 └── page.tsx               # Página inicial (Homepage)
 ```
 
@@ -88,38 +85,12 @@ app/
 - Opções para aceitar, recusar ou negociar
 - Histórico de negociações
 
-### 8. Sistema de Autenticação e Recuperação de Senha
-- **Login** (`app/login/page.tsx`):
-  - Formulário de login responsivo
-  - Opção "Lembrar-me" para persistência
-  - Link para recuperação de senha
-
-- **Cadastro** (`app/cadastro/page.tsx`):
-  - Formulário responsivo com validação
-  - Seleção de tipo de usuário (Proprietário/Corretor)
-  - Layout moderno com ícones e feedback visual
-
-- **Recuperação de Senha** (`app/recuperar-senha/page.tsx`):
-  - Formulário para solicitar link de recuperação
-  - Envio de email simulado com token
-  - Feedback visual de sucesso
-
-- **Redefinição de Senha** (`app/redefinir-senha/[token]/page.tsx`):
-  - Validação do token recebido por email
-  - Formulário para definir nova senha
-  - Validação de força de senha
-  - Confirmação visual após conclusão
-
 ## Componentes Principais
 
 ### Cabeçalhos e Navegação
 - **DynamicHeader** (`app/components/DynamicHeader.tsx`) - Cabeçalho dinâmico baseado na rota
 - **Navbar** (`app/components/Navbar.tsx`) - Barra de navegação principal
 - **PageHeader** (`app/components/PageHeader.tsx`) - Cabeçalho padrão de páginas internas
-
-### Dashboard
-- **Sidebar** (`app/components/dashboard/Sidebar.tsx`) - Menu lateral do dashboard
-- **DashboardSidebar** (`app/components/DashboardSidebar.tsx`) - Versão alternativa do menu lateral
 
 ### Componentes da Home
 - **HeroSection** - Seção principal da home
@@ -152,13 +123,6 @@ app/
 - Padding vertical assimétrico (`pt-6 pb-4`) para melhor espaçamento
 - Texto em cor escura (`text-gray-800`) 
 - Margem entre título e conteúdo (`mt-4`)
-- Espaçamento adequado entre o cabeçalho fixo e o conteúdo (`pt-28`)
-
-### Layout de Formulários
-- Inputs com ícones (`pl-10`)
-- Feedback visual para validação (bordas vermelhas, mensagens de erro)
-- Botões com estados de hover e loading
-- Agrupamento lógico de campos relacionados
 
 ### Layout de Rodapés
 - Espaçamento inferior consistente (`mb-8` nos containers principais)
@@ -186,31 +150,14 @@ app/
 3. Usuário gerencia anúncio (ativar/desativar/editar)
 4. Recebe propostas de interessados
 
-### Fluxo de Recuperação de Senha
-1. Usuário solicita recuperação de senha informando email
-2. Sistema envia email com token único (simulado)
-3. Usuário acessa link com token
-4. Token é validado e usuário define nova senha
-5. Usuário é redirecionado para login
-
 ## Melhorias e Padronizações Recentes
 
-- Padronização de espaçamento entre o cabeçalho fixo e o conteúdo principal (`pt-28`)
-- Aprimoramento da página de cadastro com validação de formulário
-- Implementação completa do fluxo de recuperação/redefinição de senha
-- Remoção da opção de "Configurações" das sidebars do proprietário
+- Padronização de espaçamento do cabeçalho em todas as páginas
 - Melhoria no contraste e legibilidade da UI
-- Adição de ícones nos campos de formulário
-- Feedback visual mais claro para validação e estados de loading
-
-## Preparação para Deploy na Vercel
-
-O projeto foi otimizado para deploy na Vercel:
-- Configuração do `next.config.js` para otimização de imagens
-- Arquivo `.vercelignore` para ignorar arquivos desnecessários
-- Script `prepare-vercel.js` para criar um arquivo ZIP pronto para upload
-- Arquivos duplicados ou não utilizados foram removidos
-- Todas as páginas foram testadas para garantir funcionamento correto
+- Adição de espaçamento consistente no rodapé
+- Menu de opções completo na página de anúncios
+- Interface melhorada para detalhes de anúncios
+- Feedback visual para anúncios inativos
 
 ## Importante
 
@@ -218,4 +165,4 @@ Esta documentação é para a versão em desenvolvimento. O sistema utiliza dado
 
 ---
 
-*Última atualização: Maio de 2024* 
+*Última atualização: Junho de 2024* 
