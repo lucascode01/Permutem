@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Permutem - Plataforma de Permuta de Imóveis</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
+      color: #333;
+    }
+    header {
+      background-color: #0071ce;
+      color: white;
+      padding: 1rem 0;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    .container {
+      width: 90%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo {
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+    .hero {
+      padding: 4rem 0;
+      text-align: center;
+    }
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      color: #0071ce;
+    }
+    p {
+      font-size: 1.1rem;
+      line-height: 1.6;
+      margin-bottom: 2rem;
+      color: #555;
+    }
+    .btn {
+      display: inline-block;
+      background-color: #0071ce;
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 4px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: background-color 0.2s;
+    }
+    .btn:hover {
+      background-color: #005db0;
+    }
+    .features {
+      padding: 4rem 0;
+      background-color: white;
+    }
+    .feature-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2rem;
+      justify-content: center;
+    }
+    .feature-card {
+      flex: 1;
+      min-width: 300px;
+      max-width: 350px;
+      padding: 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      text-align: center;
+    }
+    .feature-icon {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      color: #0071ce;
+    }
+    h2 {
+      font-size: 1.75rem;
+      margin-bottom: 2rem;
+      text-align: center;
+      color: #0071ce;
+    }
+    h3 {
+      font-size: 1.25rem;
+      margin-bottom: 0.75rem;
+      color: #333;
+    }
+    footer {
+      background-color: #333;
+      color: white;
+      padding: 2rem 0;
+      text-align: center;
+    }
+  </style>
+  <script>
+    // Tentativa de redirecionamento para o app Next.js
+    function checkNextJsApp() {
+      // Fazer uma solicitação para verificar se o app Next.js está funcionando
+      fetch('/api/health-check')
+        .then(response => {
+          if (response.ok) {
+            // Se a API estiver funcionando, tente redirecionar para o app
+            window.location.href = '/app';
+          }
+        })
+        .catch(error => {
+          console.log('Usando página estática de fallback');
+        });
+    }
+    
+    // Tenta verificar o app Next.js após 2 segundos
+    setTimeout(checkNextJsApp, 2000);
+  </script>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <div class="logo">Permutem</div>
+        <nav>
+          <a href="#" class="btn">Entrar</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="container">
+      <h1>Encontre a permuta ideal para seu imóvel</h1>
+      <p>A plataforma que conecta proprietários interessados em permutar seus imóveis de forma rápida e segura.</p>
+      <a href="#" class="btn">Anuncie seu imóvel</a>
+    </div>
+  </section>
+
+  <section class="features">
+    <div class="container">
+      <h2>Como funciona</h2>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="feature-icon">📋</div>
+          <h3>Cadastre seu imóvel</h3>
+          <p>Adicione as informações e fotos do seu imóvel e indique suas preferências de permuta.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔍</div>
+          <h3>Receba sugestões</h3>
+          <p>Nosso sistema inteligente encontra as melhores opções de permuta compatíveis com seu imóvel.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🤝</div>
+          <h3>Negocie diretamente</h3>
+          <p>Entre em contato com os proprietários e feche negócio de forma rápida e eficiente.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2024 Permutem - Todos os direitos reservados</p>
+    </div>
+  </footer>
+</body>
+</html> 
