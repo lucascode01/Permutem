@@ -65,13 +65,13 @@ export default function AdminDashboard() {
         const thirtyDaysAgo = subDays(new Date(), 30).toISOString();
         
         const newUsers = usuarios.filter(u => 
-          new Date(u.data_registro) >= new Date(thirtyDaysAgo)
+          u.data_registro ? new Date(u.data_registro) >= new Date(thirtyDaysAgo) : false
         ).length;
         
         const activeUsers = usuarios.filter(u => u.status === 'ativo').length;
         
-        const activeProperties = imoveis.filter(i => i.status === 'aprovado').length;
-        const pendingProperties = imoveis.filter(i => i.status === 'pendente').length;
+        const activeProperties = imoveis.filter(i => i.status === 'ativo').length;
+        const pendingProperties = imoveis.filter(i => i.status === 'inativo').length;
         
         const acceptedProposals = propostas.filter(p => p.status === 'aceita').length;
         const pendingProposals = propostas.filter(p => p.status === 'pendente').length;
@@ -94,15 +94,15 @@ export default function AdminDashboard() {
         const last7Days = Array(7).fill(0).map((_, i) => subDays(new Date(), 6 - i).toISOString().split('T')[0]);
         
         const userGrowth = last7Days.map(day => 
-          usuarios.filter(u => u.data_registro.split('T')[0] === day).length
+          usuarios.filter(u => u.data_registro ? u.data_registro.split('T')[0] === day : false).length
         );
         
         const propertiesGrowth = last7Days.map(day => 
-          imoveis.filter(i => i.data_cadastro.split('T')[0] === day).length
+          imoveis.filter(i => i.criado_em.split('T')[0] === day).length
         );
         
         const proposalsGrowth = last7Days.map(day => 
-          propostas.filter(p => p.data_criacao.split('T')[0] === day).length
+          propostas.filter(p => p.criado_em.split('T')[0] === day).length
         );
         
         setChartData({
@@ -114,33 +114,34 @@ export default function AdminDashboard() {
         // Gerar atividades recentes (combinando usuários, imóveis e propostas)
         const atividades = [
           ...usuarios
-            .sort((a, b) => new Date(b.data_registro).getTime() - new Date(a.data_registro).getTime())
+            .filter(u => u.data_registro) // Filtrar apenas usuários com data_registro
+            .sort((a, b) => new Date(b.data_registro!).getTime() - new Date(a.data_registro!).getTime())
             .slice(0, 3)
             .map(u => ({
-              user: `${u.nome} ${u.sobrenome}`,
+              user: `${u.primeiro_nome} ${u.ultimo_nome}`,
               action: "registrou-se na plataforma",
-              time: formatarTempoRelativo(u.data_registro)
+              time: formatarTempoRelativo(u.data_registro!)
             })),
           ...imoveis
-            .sort((a, b) => new Date(b.data_cadastro).getTime() - new Date(a.data_cadastro).getTime())
+            .sort((a, b) => new Date(b.criado_em).getTime() - new Date(a.criado_em).getTime())
             .slice(0, 3)
             .map(i => {
-              const usuario = usuarios.find(u => u.id === i.usuario_id);
+              const usuario = usuarios.find(u => u.id === i.user_id);
               return {
-                user: usuario ? `${usuario.nome} ${usuario.sobrenome}` : "Usuário",
+                user: usuario ? `${usuario.primeiro_nome} ${usuario.ultimo_nome}` : "Usuário",
                 action: "cadastrou um novo imóvel",
-                time: formatarTempoRelativo(i.data_cadastro)
+                time: formatarTempoRelativo(i.criado_em)
               };
             }),
           ...propostas
-            .sort((a, b) => new Date(b.data_criacao).getTime() - new Date(a.data_criacao).getTime())
+            .sort((a, b) => new Date(b.criado_em).getTime() - new Date(a.criado_em).getTime())
             .slice(0, 3)
             .map(p => {
-              const usuario = usuarios.find(u => u.id === p.usuario_origem_id);
+              const usuario = usuarios.find(u => u.id === p.user_origem_id);
               return {
-                user: usuario ? `${usuario.nome} ${usuario.sobrenome}` : "Usuário",
+                user: usuario ? `${usuario.primeiro_nome} ${usuario.ultimo_nome}` : "Usuário",
                 action: "fez uma proposta de permuta",
-                time: formatarTempoRelativo(p.data_criacao)
+                time: formatarTempoRelativo(p.criado_em)
               };
             })
         ];

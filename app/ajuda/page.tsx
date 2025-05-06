@@ -40,7 +40,7 @@ export default function AjudaPage() {
               
               <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
                 <h3 className="text-xl font-semibold mb-3 text-primary">Como funciona a permuta internacional?</h3>
-                <p className="text-gray-600">A permuta internacional permite trocar imóveis entre países diferentes. O Permuti conecta proprietários do Brasil, EUA e Portugal, facilitando o processo com suporte especializado.</p>
+                <p className="text-gray-600">A permuta internacional permite trocar imóveis entre países diferentes. O Permutem conecta proprietários do Brasil, EUA e Portugal, facilitando o processo com suporte especializado.</p>
               </div>
               
               <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
@@ -74,7 +74,7 @@ export default function AjudaPage() {
                     </div>
                     <div>
                       <h3 className="font-semibold">E-mail</h3>
-                      <p className="text-gray-600">contato@permuti.com</p>
+                      <p className="text-gray-600">contato@permutem.com</p>
                     </div>
                   </div>
                   <div className="flex items-center">

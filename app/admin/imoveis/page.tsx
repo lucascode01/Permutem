@@ -5,15 +5,20 @@ import { FaSearch, FaFilter, FaBuilding, FaEye, FaCheckCircle, FaTimesCircle, Fa
 import Image from 'next/image';
 import { useSupabase } from '@/app/contexts/SupabaseContext';
 import { toast } from 'react-hot-toast';
-import { Imovel, Usuario } from '@/app/lib/supabase';
+import type { Types } from '@/app/lib/supabase';
 
 // Tipo estendido que combina o Imovel do Supabase com informações de proprietário
-type ImovelComProprietario = Imovel & {
+type ImovelComProprietario = Types.Imovel & {
   proprietario?: {
     id: string;
     nome: string;
     email: string;
   };
+  // Campos adicionais para compatibilidade com o restante do código
+  localizacao?: string;
+  imagens?: string[];
+  aceita_permuta?: boolean;
+  data_cadastro?: string;
 };
 
 export default function ImoveisAdminPage() {
@@ -31,14 +36,23 @@ export default function ImoveisAdminPage() {
   useEffect(() => {
     if (!isLoading && imoveis.length > 0 && usuarios.length > 0) {
       const imoveisComDono = imoveis.map(imovel => {
-        const proprietario = usuarios.find(u => u.id === imovel.usuario_id);
+        const proprietario = usuarios.find(u => u.id === imovel.user_id);
+        // Criar um objeto com campos adicionais para compatibilidade
+        const imagens = imovel.fotos || [];
+        const localizacao = imovel.endereco ? 
+          `${imovel.endereco.cidade}, ${imovel.endereco.uf}` : 'Localização não informada';
+        
         return {
           ...imovel,
           proprietario: proprietario ? {
             id: proprietario.id,
-            nome: `${proprietario.nome} ${proprietario.sobrenome}`,
+            nome: `${proprietario.primeiro_nome} ${proprietario.ultimo_nome}`,
             email: proprietario.email
-          } : undefined
+          } : undefined,
+          localizacao,
+          imagens,
+          aceita_permuta: imovel.finalidade === 'permuta' || imovel.finalidade === 'ambos',
+          data_cadastro: imovel.criado_em
         };
       });
       
@@ -94,7 +108,7 @@ export default function ImoveisAdminPage() {
       const termoBuscaLower = busca.toLowerCase();
       return (
         imovel.titulo.toLowerCase().includes(termoBuscaLower) ||
-        imovel.localizacao.toLowerCase().includes(termoBuscaLower) ||
+        (imovel.localizacao?.toLowerCase().includes(termoBuscaLower) || false) ||
         (imovel.proprietario?.nome.toLowerCase().includes(termoBuscaLower) || false)
       );
     }
@@ -109,14 +123,23 @@ export default function ImoveisAdminPage() {
   const handleAlterarStatus = async (id: string, novoStatus: 'aprovado' | 'pendente' | 'reprovado' | 'pausado') => {
     try {
       setProcessandoAcao(`status-${id}`);
-      const sucesso = await alterarStatusImovel(id, novoStatus);
+      // Mapear os status da interface para os status do tipo Imovel
+      const statusMap: Record<string, 'ativo' | 'inativo' | 'vendido' | 'permutado'> = {
+        'aprovado': 'ativo',
+        'pendente': 'inativo',
+        'reprovado': 'inativo',
+        'pausado': 'inativo'
+      };
+      
+      const statusImovel = statusMap[novoStatus];
+      const sucesso = await alterarStatusImovel(id, statusImovel);
       
       if (sucesso) {
         // Status já foi atualizado pelo context
         if (imovelSelecionado?.id === id) {
           setImovelSelecionado({
             ...imovelSelecionado,
-            status: novoStatus
+            status: novoStatus as any // Forçar tipo para compatibilidade
           });
         }
         toast.success(`Status do imóvel alterado para ${novoStatus}`);

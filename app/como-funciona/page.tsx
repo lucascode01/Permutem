@@ -119,7 +119,7 @@ export default function ComoFuncionaPage() {
         <section className="py-16 bg-gray-50 mt-16">
           <div className="container mx-auto px-4 max-w-6xl">
             <div className="text-center">
-              <h1 className="text-4xl font-bold mb-6">Como funciona o Permuti</h1>
+              <h1 className="text-4xl font-bold mb-6">Como funciona o Permutem</h1>
               <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
                 Somos o único portal do mundo de permuta internacional de imóveis, conectando proprietários do Brasil, EUA e Portugal.
               </p>
@@ -134,7 +134,7 @@ export default function ComoFuncionaPage() {
         <section className="py-16 bg-white">
           <div className="container mx-auto px-4 max-w-6xl">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold mb-4">Benefícios de usar o Permuti</h2>
+              <h2 className="text-3xl font-bold mb-4">Benefícios de usar o Permutem</h2>
               <p className="text-lg text-gray-600 max-w-3xl mx-auto">
                 Descubra como nossa plataforma facilita a permuta de imóveis no Brasil e internacionalmente
               </p>
@@ -147,8 +147,8 @@ export default function ComoFuncionaPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold mb-2">Alcance Internacional</h3>
-                <p className="text-gray-600">Acesso a proprietários no Brasil, EUA e Portugal, expandindo suas possibilidades de negócio.</p>
+                <h3 className="text-xl font-semibold mb-2">Alcance Nacional</h3>
+                <p className="text-gray-600">Acesso a proprietários em todo o Brasil, expandindo suas possibilidades de negócio.</p>
               </div>
               
               <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
@@ -182,11 +182,14 @@ export default function ComoFuncionaPage() {
               <p className="text-lg text-gray-600 mb-8 max-w-3xl mx-auto">
                 Comece agora mesmo e encontre a melhor opção para sua permuta nacional ou internacional.
               </p>
-              <div className="flex justify-center space-x-4">
-                <Link href="/cadastro" className="bg-primary hover:bg-primary-dark text-white font-bold py-3 px-6 rounded-lg transition-colors">
+              <div className="flex justify-center space-x-4 flex-wrap">
+                <Link href="/cadastro" className="bg-primary hover:bg-primary-dark text-white font-bold py-3 px-6 rounded-lg transition-colors mb-2 sm:mb-0">
                   Anunciar meu imóvel
                 </Link>
-                <Link href="/ajuda" className="bg-white border border-primary text-primary hover:bg-gray-50 font-bold py-3 px-6 rounded-lg transition-colors">
+                <Link href="/planos/visualizar" className="bg-white border border-primary text-primary hover:bg-gray-50 font-bold py-3 px-6 rounded-lg transition-colors mb-2 sm:mb-0">
+                  Conheça nossos planos
+                </Link>
+                <Link href="/ajuda" className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-bold py-3 px-6 rounded-lg transition-colors">
                   Saiba mais
                 </Link>
               </div>

@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaEye, FaEyeSlash, FaGoogle, FaFacebookF, FaApple } from 'react-icons/fa';
 import PageHeader from '../components/PageHeader';
 import HydrationFix from '../components/HydrationFix';
 import { useAuth } from '../contexts/AuthContext';
@@ -18,9 +18,16 @@ export default function LoginPage() {
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isAppleDevice, setIsAppleDevice] = useState(false);
   
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, loginWithSocial } = useAuth();
+
+  // Detectar se é um dispositivo Apple
+  useEffect(() => {
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    setIsAppleDevice(/iphone|ipad|ipod|macintosh/.test(userAgent));
+  }, []);
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -52,6 +59,21 @@ export default function LoginPage() {
       setError('Ocorreu um erro durante o login. Por favor, tente novamente.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleSocialLogin = async (provider: 'google' | 'facebook' | 'apple') => {
+    setError('');
+    try {
+      const success = await loginWithSocial(provider);
+      if (success) {
+        router.push('/dashboard');
+      } else {
+        setError(`Não foi possível entrar com ${provider}. Por favor, tente novamente.`);
+      }
+    } catch (error) {
+      console.error(`Erro no login com ${provider}:`, error);
+      setError(`Ocorreu um erro durante o login com ${provider}. Por favor, tente novamente.`);
     }
   };
 
@@ -151,6 +173,43 @@ export default function LoginPage() {
                 >
                   {isLoading ? 'Entrando...' : 'Entrar'}
                 </button>
+                
+                <div className="relative flex items-center mt-4">
+                  <div className="flex-grow border-t border-gray-200"></div>
+                  <span className="flex-shrink mx-4 text-gray-400 text-sm">ou entre com</span>
+                  <div className="flex-grow border-t border-gray-200"></div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <button
+                    type="button"
+                    onClick={() => handleSocialLogin('google')}
+                    className="flex items-center justify-center bg-white border border-gray-300 rounded-lg py-2 px-4 text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <FaGoogle className="text-red-500 mr-2" />
+                    <span className="text-sm">Google</span>
+                  </button>
+                  
+                  <button
+                    type="button"
+                    onClick={() => handleSocialLogin('facebook')}
+                    className="flex items-center justify-center bg-blue-600 rounded-lg py-2 px-4 text-white hover:bg-blue-700 transition-colors"
+                  >
+                    <FaFacebookF className="mr-2" />
+                    <span className="text-sm">Facebook</span>
+                  </button>
+                </div>
+                
+                {isAppleDevice && (
+                  <button
+                    type="button"
+                    onClick={() => handleSocialLogin('apple')}
+                    className="w-full flex items-center justify-center bg-black rounded-lg py-2 px-4 text-white hover:bg-gray-900 transition-colors mt-2"
+                  >
+                    <FaApple className="mr-2" />
+                    <span className="text-sm">Entrar com Apple</span>
+                  </button>
+                )}
                 
                 <div className="text-center text-gray-600 pt-4">
                   <span className="text-sm">Não tem uma conta?</span>{" "}

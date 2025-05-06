@@ -21,7 +21,14 @@ const nextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'lvmiyeudjowgtglwmodz.supabase.co',
+        port: '',
+        pathname: '/storage/v1/object/public/**',
+      },
     ],
+    domains: ['lvmiyeudjowgtglwmodz.supabase.co'],
   },
   // Ignorar avisos de dependências opcionais
   webpack: (config) => {

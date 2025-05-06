@@ -89,8 +89,8 @@ export default function CheckoutSuccessPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
         <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full text-center">
-          <div className="text-red-500 text-5xl mb-4">
-            <FaCheckCircle />
+          <div className="flex justify-center items-center text-red-500 text-5xl mb-4">
+            <FaCheckCircle className="mx-auto" />
           </div>
           <h1 className="text-2xl font-bold mb-4">Erro no processamento</h1>
           <p className="text-gray-600 mb-6">
@@ -110,8 +110,8 @@ export default function CheckoutSuccessPage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
       <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full text-center">
-        <div className="text-green-500 text-5xl mb-4">
-          <FaCheckCircle />
+        <div className="flex justify-center items-center text-green-500 text-5xl mb-4">
+          <FaCheckCircle className="mx-auto" />
         </div>
         
         <h1 className="text-2xl font-bold mb-4">Pagamento confirmado!</h1>

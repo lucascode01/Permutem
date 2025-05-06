@@ -3,17 +3,21 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { FaArrowLeft, FaImage, FaMapMarkerAlt, FaTrash } from 'react-icons/fa';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
 import { uploadMultipleImages } from '@/app/lib/supabase';
 
-export default function CriarAnuncioPage() {
+export default function EditarAnuncioPage() {
   const router = useRouter();
+  const params = useParams();
+  const anuncioId = params?.id as string;
+  
   const { user, isLoading } = useAuth();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingAnuncio, setIsLoadingAnuncio] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Form data
@@ -33,8 +37,93 @@ export default function CriarAnuncioPage() {
     aceitaPermuta: false,
     localPermuta: '',
     fotos: [] as File[],
-    fotosPreview: [] as string[]
+    fotosPreview: [] as string[],
+    fotosExistentes: [] as string[],
+    fotosParaRemover: [] as string[]
   });
+
+  // Buscar dados do anúncio
+  useEffect(() => {
+    if (anuncioId && !isLoading) {
+      // Recuperar anúncios do localStorage
+      const savedAnuncios = localStorage.getItem('userAnuncios');
+      if (savedAnuncios) {
+        try {
+          const anuncios = JSON.parse(savedAnuncios);
+          const anuncio = anuncios.find((item: any) => item.id && item.id.toString() === anuncioId);
+          
+          if (anuncio) {
+            console.log('Anúncio encontrado para edição:', anuncio);
+            
+            // Verificar se o usuário atual é o dono do anúncio
+            if (!user || anuncio.userId !== user.id) {
+              toast.error('Você não tem permissão para editar este anúncio');
+              router.push('/anuncios');
+              return;
+            }
+            
+            // Verificar se temos imagens salvas separadamente no localStorage
+            const savedImagens = localStorage.getItem(`anuncio_imagens_${anuncioId}`);
+            let imagensExistentes: string[] = [];
+            
+            if (savedImagens) {
+              try {
+                // Filtrar URLs inválidas (como blob:)
+                const imagens = JSON.parse(savedImagens);
+                imagensExistentes = Array.isArray(imagens) 
+                  ? imagens.filter((url: any) => url && typeof url === 'string' && !url.startsWith('blob:'))
+                  : [];
+                
+                console.log('Imagens recuperadas do localStorage (após filtro):', imagensExistentes);
+              } catch (err) {
+                console.error('Erro ao parsear imagens do localStorage:', err);
+              }
+            } else if (anuncio.imagens && Array.isArray(anuncio.imagens) && anuncio.imagens.length > 0) {
+              // Se não temos no localStorage específico, mas temos no anúncio
+              // Também filtrar URLs inválidas
+              imagensExistentes = anuncio.imagens.filter((url: any) => url && typeof url === 'string' && !url.startsWith('blob:'));
+              console.log('Usando imagens do objeto anúncio (após filtro):', imagensExistentes);
+            } else if (anuncio.imagem && typeof anuncio.imagem === 'string' && !anuncio.imagem.startsWith('blob:')) {
+              // Se só temos a imagem principal
+              imagensExistentes = [anuncio.imagem];
+              console.log('Usando imagem única do anúncio:', imagensExistentes);
+            }
+            
+            // Preencher o formulário com os dados do anúncio
+            setFormData({
+              titulo: anuncio.titulo || '',
+              descricao: anuncio.descricao || '',
+              tipo: anuncio.tipo || 'apartamento',
+              preco: anuncio.preco || '',
+              area: anuncio.area || '',
+              quartos: anuncio.quartos || '1',
+              banheiros: anuncio.banheiros || '1',
+              vagas: anuncio.vagas || '0',
+              endereco: anuncio.endereco?.split(',')[0] || '',
+              cidade: anuncio.cidade || '',
+              estado: anuncio.estado || '',
+              cep: anuncio.cep || '',
+              aceitaPermuta: anuncio.aceitaPermuta || false,
+              localPermuta: anuncio.localPermuta || '',
+              fotos: [], // Não podemos carregar os arquivos File originais, apenas URLs
+              fotosExistentes: imagensExistentes, // Guardar URLs das imagens existentes
+              fotosPreview: [], // Será preenchido se o usuário adicionar novas fotos
+              fotosParaRemover: [] // IDs ou URLs das fotos que devem ser removidas
+            });
+            
+            setIsLoadingAnuncio(false);
+            return;
+          }
+        } catch (err) {
+          console.error('Erro ao carregar anúncios:', err);
+        }
+      }
+      
+      // Se não encontrou o anúncio
+      toast.error('Anúncio não encontrado');
+      router.push('/anuncios');
+    }
+  }, [anuncioId, user, isLoading, router]);
 
   // Redirecionar se o usuário não estiver logado
   useEffect(() => {
@@ -88,7 +177,8 @@ export default function CriarAnuncioPage() {
     if (!files) return;
 
     // Verificar limite de arquivos
-    if (formData.fotos.length + files.length > 10) {
+    const totalFotos = formData.fotos.length + formData.fotosExistentes.length;
+    if (totalFotos + files.length > 10) {
       toast.error('Você pode adicionar no máximo 10 fotos');
       return;
     }
@@ -110,12 +200,8 @@ export default function CriarAnuncioPage() {
         return;
       }
 
-      // Criar uma cópia do arquivo para o estado
       newFiles.push(file);
-      
-      // Criar uma URL permanente para o preview
-      const objectUrl = URL.createObjectURL(file);
-      newPreviewUrls.push(objectUrl);
+      newPreviewUrls.push(URL.createObjectURL(file));
     });
 
     // Atualizar o estado
@@ -143,6 +229,13 @@ export default function CriarAnuncioPage() {
     }));
   };
 
+  const handleRemoveFotoExistente = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      fotosExistentes: prev.fotosExistentes.filter((_, i) => i !== index)
+    }));
+  };
+
   const triggerFileInput = () => {
     fileInputRef.current?.click();
   };
@@ -160,8 +253,8 @@ export default function CriarAnuncioPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validar se há pelo menos uma foto
-    if (formData.fotos.length === 0) {
+    // Verificar se há pelo menos uma foto (existente ou nova)
+    if (formData.fotosExistentes.length === 0 && formData.fotos.length === 0) {
       toast.error('Adicione pelo menos uma foto do imóvel');
       return;
     }
@@ -169,38 +262,50 @@ export default function CriarAnuncioPage() {
     setIsSubmitting(true);
     
     try {
-      // Upload de fotos para o Supabase Storage
-      const { urls, errors } = await uploadMultipleImages(
-        formData.fotos,
-        'imoveis',
-        user?.id
-      );
+      // Upload de novas fotos, se houver
+      let todasImagens = [...formData.fotosExistentes]; // Começamos com as existentes
       
-      if (errors.length > 0) {
-        console.error('Erros ao fazer upload das imagens:', errors);
-        toast.error('Algumas imagens não puderam ser enviadas');
+      if (formData.fotos.length > 0) {
+        const { urls, errors } = await uploadMultipleImages(
+          formData.fotos,
+          'imoveis',
+          user?.id
+        );
+        
+        if (errors.length > 0) {
+          console.error('Erros ao fazer upload das imagens:', errors);
+          toast.error('Algumas imagens não puderam ser enviadas');
+        }
+        
+        if (urls.length > 0) {
+          // Adicionar novas URLs à lista existente
+          todasImagens = [...todasImagens, ...urls];
+          console.log('Novas URLs de imagens após upload:', urls);
+          console.log('Lista completa de imagens:', todasImagens);
+        }
       }
       
-      // Mesmo se houver erros, continuamos com as URLs que foram obtidas com sucesso
-      const urlsValidas = urls.filter(url => url && typeof url === 'string');
-      
-      if (urlsValidas.length === 0) {
-        console.warn('Nenhuma URL válida obtida, usando fallback para URLs temporárias');
-        // Usar as URLs de preview temporárias como fallback (não ideal mas melhor que nada)
-        urlsValidas.push(...formData.fotosPreview);
-      }
-      
-      console.log('URLs das imagens para salvar:', urlsValidas);
-      
-      // Simulação de API para desenvolvimento
+      // Simulação de processamento para desenvolvimento
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Simulando um ID único para o anúncio
-      const novoId = Date.now();
+      // Recuperar anúncios atuais
+      const savedAnuncios = localStorage.getItem('userAnuncios');
+      if (!savedAnuncios) {
+        throw new Error('Não foi possível localizar os anúncios');
+      }
       
-      // Preparar anúncio para salvar no localStorage com URLs reais das imagens
-      const novoAnuncio: any = {
-        id: novoId,
+      const anuncios = JSON.parse(savedAnuncios);
+      const anuncioIndex = anuncios.findIndex((item: any) => 
+        item.id && item.id.toString() === anuncioId
+      );
+      
+      if (anuncioIndex === -1) {
+        throw new Error('Anúncio não encontrado');
+      }
+      
+      // Atualizar os dados do anúncio
+      const anuncioAtualizado = {
+        ...anuncios[anuncioIndex],
         titulo: formData.titulo,
         descricao: formData.descricao,
         tipo: formData.tipo,
@@ -215,58 +320,32 @@ export default function CriarAnuncioPage() {
         cep: formData.cep,
         aceitaPermuta: formData.aceitaPermuta,
         localPermuta: formData.localPermuta,
-        // Usar as URLs obtidas
-        imagem: urlsValidas.length > 0 ? urlsValidas[0] : '/placeholder-image.jpg',
-        imagens: urlsValidas,
-        status: 'ativo',
-        visualizacoes: 0,
-        propostas: 0,
-        destaque: false,
-        dataPublicacao: new Date().toLocaleDateString('pt-BR'),
-        dataAtualizacao: new Date().toLocaleDateString('pt-BR'),
-        userId: user?.id,
-        telefone: '(XX) XXXXX-XXXX',
+        imagens: todasImagens,
+        imagem: todasImagens.length > 0 ? todasImagens[0] : null,
+        dataAtualizacao: new Date().toLocaleDateString('pt-BR')
       };
       
-      // Verificar se as URLs são temporárias (blob:) e adicionar flags
-      const temUrlsTemporarias = urlsValidas.some(url => url?.startsWith('blob:'));
-      if (temUrlsTemporarias) {
-        console.warn('Anúncio contém URLs temporárias que podem não persistir');
-        novoAnuncio.urlsTemporarias = true;
+      // Atualizar a lista de anúncios
+      anuncios[anuncioIndex] = anuncioAtualizado;
+      localStorage.setItem('userAnuncios', JSON.stringify(anuncios));
+      
+      // Atualizar as imagens separadamente
+      if (todasImagens.length > 0) {
+        localStorage.setItem(`anuncio_imagens_${anuncioId}`, JSON.stringify(todasImagens));
       }
       
-      // Recuperar anúncios existentes no localStorage
-      let anunciosExistentes = [];
-      const savedAnuncios = localStorage.getItem('userAnuncios');
-      if (savedAnuncios) {
-        try {
-          anunciosExistentes = JSON.parse(savedAnuncios);
-        } catch (err) {
-          console.error('Erro ao parsear anúncios do localStorage:', err);
-        }
-      }
-      
-      // Adicionar novo anúncio e salvar no localStorage
-      const anunciosAtualizados = [novoAnuncio, ...anunciosExistentes];
-      localStorage.setItem('userAnuncios', JSON.stringify(anunciosAtualizados));
-      
-      // Também salvar as imagens separadamente para garantir acesso posterior
-      localStorage.setItem(`anuncio_imagens_${novoId}`, JSON.stringify(urlsValidas));
-      
-      toast.success('Anúncio criado com sucesso!');
-      
-      // Redirecione para a página de anúncios
+      toast.success('Anúncio atualizado com sucesso!');
       router.push('/anuncios');
     } catch (error) {
-      console.error('Erro ao enviar anúncio:', error);
-      toast.error('Ocorreu um erro ao criar o anúncio. Tente novamente.');
+      console.error('Erro ao atualizar anúncio:', error);
+      toast.error('Ocorreu um erro ao atualizar o anúncio.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   // Renderizar um loading state enquanto verifica autenticação
-  if (isLoading) {
+  if (isLoading || isLoadingAnuncio) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
@@ -285,7 +364,7 @@ export default function CriarAnuncioPage() {
           <Link href="/anuncios" className="text-gray-500 hover:text-gray-700 transition-colors mr-3">
             <FaArrowLeft className="w-5 h-5" />
           </Link>
-          <h1 className="text-base font-medium ml-2">Cadastrar Imóvel</h1>
+          <h1 className="text-base font-medium ml-2">Editar Anúncio</h1>
         </div>
       </header>
 
@@ -573,6 +652,42 @@ export default function CriarAnuncioPage() {
             <form onSubmit={handleSubmit}>
               <h2 className="text-xl font-semibold mb-6">Fotos do Imóvel</h2>
               
+              {/* Fotos existentes */}
+              {formData.fotosExistentes.length > 0 && (
+                <div className="mb-8">
+                  <h3 className="text-gray-700 font-medium mb-3">Fotos atuais:</h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    {formData.fotosExistentes.map((preview, index) => (
+                      <div key={`existing-${index}`} className="relative group">
+                        <div className="relative overflow-hidden rounded-md border border-gray-200 aspect-video">
+                          <Image 
+                            src={preview} 
+                            alt={`Imagem ${index + 1}`}
+                            fill
+                            sizes="(max-width: 768px) 100vw, 33vw"
+                            style={{ objectFit: 'cover' }}
+                            className="w-full h-full"
+                          />
+                        </div>
+                        <button 
+                          type="button"
+                          onClick={() => handleRemoveFotoExistente(index)}
+                          className="absolute top-2 right-2 bg-white bg-opacity-70 text-red-500 rounded-full p-1 shadow-sm hover:bg-opacity-100 transition-all"
+                          title="Remover foto"
+                        >
+                          <FaTrash size={14} />
+                        </button>
+                        {index === 0 && formData.fotosPreview.length === 0 && (
+                          <span className="absolute top-2 left-2 bg-[#4CAF50] text-white text-xs px-2 py-1 rounded-md">
+                            Capa
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
               <div className="mb-8">
                 <div 
                   className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:bg-gray-50 transition-colors"
@@ -585,7 +700,7 @@ export default function CriarAnuncioPage() {
                     type="button"
                     className="bg-white border border-gray-300 text-gray-700 font-medium py-2 px-4 rounded-md hover:bg-gray-50"
                   >
-                    Selecionar fotos
+                    Adicionar novas fotos
                   </button>
                   
                   {/* Input de arquivo escondido */}
@@ -603,13 +718,13 @@ export default function CriarAnuncioPage() {
                 </p>
               </div>
               
-              {/* Preview das imagens */}
+              {/* Preview das novas imagens */}
               {formData.fotosPreview.length > 0 && (
                 <div className="mb-8">
-                  <h3 className="text-gray-700 font-medium mb-3">Fotos selecionadas:</h3>
+                  <h3 className="text-gray-700 font-medium mb-3">Novas fotos:</h3>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                     {formData.fotosPreview.map((preview, index) => (
-                      <div key={index} className="relative group">
+                      <div key={`new-${index}`} className="relative group">
                         <div className="relative overflow-hidden rounded-md border border-gray-200 aspect-video">
                           <Image 
                             src={preview} 
@@ -628,7 +743,7 @@ export default function CriarAnuncioPage() {
                         >
                           <FaTrash size={14} />
                         </button>
-                        {index === 0 && (
+                        {index === 0 && formData.fotosExistentes.length === 0 && (
                           <span className="absolute top-2 left-2 bg-[#4CAF50] text-white text-xs px-2 py-1 rounded-md">
                             Capa
                           </span>
@@ -638,16 +753,6 @@ export default function CriarAnuncioPage() {
                   </div>
                 </div>
               )}
-              
-              <div className="bg-yellow-50 p-4 rounded-md mb-8">
-                <h3 className="text-yellow-800 font-medium mb-2">Dicas para fotos de qualidade:</h3>
-                <ul className="text-sm text-yellow-700 space-y-1 list-disc list-inside">
-                  <li>Use fotos bem iluminadas e nítidas</li>
-                  <li>Capture todos os cômodos principais</li>
-                  <li>Organize e limpe o ambiente antes de fotografar</li>
-                  <li>Fotos horizontais funcionam melhor</li>
-                </ul>
-              </div>
               
               <div className="mt-8 flex justify-between">
                 <button 
@@ -662,7 +767,7 @@ export default function CriarAnuncioPage() {
                   disabled={isSubmitting}
                   className="bg-[#4CAF50] hover:bg-[#43a047] text-white font-medium py-2 px-6 rounded-md disabled:opacity-70"
                 >
-                  {isSubmitting ? 'Publicando...' : 'Publicar Anúncio'}
+                  {isSubmitting ? 'Salvando...' : 'Salvar Alterações'}
                 </button>
               </div>
             </form>

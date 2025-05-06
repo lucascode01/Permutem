@@ -1,37 +1,51 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { FaEye, FaEyeSlash, FaUser, FaEnvelope, FaLock, FaIdCard } from 'react-icons/fa';
+import { FaEye, FaEyeSlash, FaUser, FaEnvelope, FaLock, FaIdCard, FaGoogle, FaFacebookF, FaApple } from 'react-icons/fa';
 import PageHeader from '../components/PageHeader';
 import HydrationFix from '../components/HydrationFix';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function CadastroPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [userType, setUserType] = useState('proprietario');
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     email: '',
     password: '',
+    confirmPassword: '',
   });
   const [errors, setErrors] = useState({
     firstName: '',
     lastName: '',
     email: '',
     password: '',
+    confirmPassword: '',
     general: ''
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [isAppleDevice, setIsAppleDevice] = useState(false);
   
   const router = useRouter();
-  const { register } = useAuth();
+  const { register, registerWithSocial } = useAuth();
+
+  // Detectar se é um dispositivo Apple
+  useEffect(() => {
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    setIsAppleDevice(/iphone|ipad|ipod|macintosh/.test(userAgent));
+  }, []);
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
+  };
+
+  const toggleConfirmPasswordVisibility = () => {
+    setShowConfirmPassword(!showConfirmPassword);
   };
 
   const handleUserTypeChange = (type: string) => {
@@ -60,6 +74,7 @@ export default function CadastroPage() {
       lastName: '',
       email: '',
       password: '',
+      confirmPassword: '',
       general: ''
     };
     let isValid = true;
@@ -90,6 +105,15 @@ export default function CadastroPage() {
       isValid = false;
     }
 
+    // Validação da confirmação de senha
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = 'A confirmação de senha é obrigatória';
+      isValid = false;
+    } else if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'As senhas não coincidem';
+      isValid = false;
+    }
+
     setErrors(newErrors);
     return isValid;
   };
@@ -106,11 +130,11 @@ export default function CadastroPage() {
     
     try {
       const success = await register(
+        formData.email,
         formData.firstName,
         formData.lastName,
-        formData.email,
-        formData.password,
-        userType
+        userType,
+        formData.password
       );
       
       if (success) {
@@ -129,6 +153,27 @@ export default function CadastroPage() {
       }));
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleSocialRegister = async (provider: 'google' | 'facebook' | 'apple') => {
+    setErrors(prev => ({ ...prev, general: '' }));
+    try {
+      const success = await registerWithSocial(provider, userType);
+      if (success) {
+        router.push('/selecionar-plano');
+      } else {
+        setErrors(prev => ({
+          ...prev,
+          general: `Não foi possível fazer cadastro com ${provider}. Por favor, tente novamente.`
+        }));
+      }
+    } catch (error) {
+      console.error(`Erro no cadastro com ${provider}:`, error);
+      setErrors(prev => ({
+        ...prev,
+        general: `Ocorreu um erro durante o cadastro com ${provider}. Por favor, tente novamente.`
+      }));
     }
   };
 
@@ -265,38 +310,105 @@ export default function CadastroPage() {
                   )}
                 </div>
                 
+                {/* Campo de confirmação de senha */}
+                <div>
+                  <label htmlFor="confirmPassword" className="block text-gray-700 text-sm font-medium mb-2">Confirme sua senha</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <FaLock className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input 
+                      type={showConfirmPassword ? "text" : "password"} 
+                      id="confirmPassword" 
+                      name="confirmPassword"
+                      value={formData.confirmPassword}
+                      onChange={handleInputChange}
+                      className={`w-full pl-10 pr-12 py-3 border ${errors.confirmPassword ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all`}
+                      placeholder="Digite sua senha novamente" 
+                    />
+                    <button 
+                      type="button"
+                      onClick={toggleConfirmPasswordVisibility}
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                      aria-label={showConfirmPassword ? "Esconder senha" : "Mostrar senha"}
+                    >
+                      {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                    </button>
+                  </div>
+                  {errors.confirmPassword && (
+                    <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
+                  )}
+                </div>
+                
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <label className="block text-gray-700 text-sm font-medium mb-3">Sou um:</label>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div 
-                      className={`flex items-center border ${userType === 'proprietario' ? 'border-primary bg-primary bg-opacity-5' : 'border-gray-300'} rounded-lg p-3 cursor-pointer transition-all duration-200 hover:border-primary`}
+                  <div className="flex space-x-4 mb-6">
+                    <button
+                      type="button"
                       onClick={() => handleUserTypeChange('proprietario')}
+                      className={`flex-1 py-2 px-4 rounded-md text-center ${
+                        userType === 'proprietario' 
+                        ? 'bg-primary text-white' 
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      } transition-colors`}
                     >
-                      <input 
-                        type="radio" 
-                        id="proprietario" 
-                        name="userType" 
-                        checked={userType === 'proprietario'}
-                        onChange={() => handleUserTypeChange('proprietario')}
-                        className="mr-2 h-4 w-4 text-primary"
-                      />
-                      <label htmlFor="proprietario" className="text-gray-700 cursor-pointer text-sm">Proprietário</label>
-                    </div>
-                    <div 
-                      className={`flex items-center border ${userType === 'corretor' ? 'border-primary bg-primary bg-opacity-5' : 'border-gray-300'} rounded-lg p-3 cursor-pointer transition-all duration-200 hover:border-primary`}
+                      Proprietário
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => handleUserTypeChange('corretor')}
+                      className={`flex-1 py-2 px-4 rounded-md text-center ${
+                        userType === 'corretor' 
+                        ? 'bg-primary text-white' 
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      } transition-colors`}
                     >
-                      <input 
-                        type="radio" 
-                        id="corretor" 
-                        name="userType" 
-                        checked={userType === 'corretor'}
-                        onChange={() => handleUserTypeChange('corretor')}
-                        className="mr-2 h-4 w-4 text-primary"
-                      />
-                      <label htmlFor="corretor" className="text-gray-700 cursor-pointer text-sm">Corretor</label>
-                    </div>
+                      Corretor
+                    </button>
                   </div>
+                </div>
+                
+                <div className="relative flex items-center mb-6">
+                  <div className="flex-grow border-t border-gray-200"></div>
+                  <span className="flex-shrink mx-4 text-gray-400 text-sm">Continue com</span>
+                  <div className="flex-grow border-t border-gray-200"></div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <button
+                    type="button"
+                    onClick={() => handleSocialRegister('google')}
+                    className="flex items-center justify-center bg-white border border-gray-300 rounded-lg py-3 px-4 text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <FaGoogle className="text-red-500 mr-2" />
+                    <span className="text-sm">Google</span>
+                  </button>
+                  
+                  <button
+                    type="button"
+                    onClick={() => handleSocialRegister('facebook')}
+                    className="flex items-center justify-center bg-blue-600 rounded-lg py-3 px-4 text-white hover:bg-blue-700 transition-colors"
+                  >
+                    <FaFacebookF className="mr-2" />
+                    <span className="text-sm">Facebook</span>
+                  </button>
+                </div>
+                
+                {isAppleDevice && (
+                  <button
+                    type="button"
+                    onClick={() => handleSocialRegister('apple')}
+                    className="w-full flex items-center justify-center bg-black rounded-lg py-3 px-4 text-white hover:bg-gray-900 transition-colors mb-6"
+                  >
+                    <FaApple className="mr-2" />
+                    <span className="text-sm">Continuar com Apple</span>
+                  </button>
+                )}
+
+                <div className="relative flex items-center mb-6">
+                  <div className="flex-grow border-t border-gray-200"></div>
+                  <span className="flex-shrink mx-4 text-gray-400 text-sm">ou preencha o formulário</span>
+                  <div className="flex-grow border-t border-gray-200"></div>
                 </div>
                 
                 <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-md">
