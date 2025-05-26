@@ -72,7 +72,7 @@ export const SupabaseProvider = ({ children }: { children: React.ReactNode }) =>
   const [propostas, setPropostas] = useState<Types.Proposta[]>([]);
   const [usuarios, setUsuarios] = useState<Types.Usuario[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isUsingMockData, setIsUsingMockData] = useState<boolean>(true);
+  const [isUsingMockData, setIsUsingMockData] = useState<boolean>(false);
 
   // Simulação de planos
   const mockPlanos: Types.Plano[] = [
@@ -221,13 +221,16 @@ export const SupabaseProvider = ({ children }: { children: React.ReactNode }) =>
   // Função para buscar planos
   const fetchPlanos = async (): Promise<Types.Plano[]> => {
     try {
-      // Aqui faria a consulta ao Supabase
-      // const { data, error } = await supabase.from('planos').select('*').order('ordem');
+      // Fazer consulta ao Supabase
+      const { data, error } = await supabase.from('planos').select('*').order('ordem');
       
-      // Usar mock para desenvolvimento
-      const mockData = mockPlanos;
-      setPlanos(mockData);
-      return mockData;
+      if (error) {
+        console.error('Erro ao buscar planos:', error);
+        return [];
+      }
+      
+      setPlanos(data);
+      return data;
     } catch (error) {
       console.error('Erro ao buscar planos:', error);
       return [];
@@ -827,20 +830,89 @@ export const SupabaseProvider = ({ children }: { children: React.ReactNode }) =>
   // Função para alterar o status de um imóvel
   const alterarStatusImovel = async (id: string, status: 'ativo' | 'inativo' | 'vendido' | 'permutado') => {
     try {
-      console.log(`Alterando status do imóvel ${id} para ${status}`);
+      // Buscar o imóvel primeiro para obter informações necessárias para notificação
+      const { data: imovelData, error: fetchError } = await supabase
+        .from('imoveis')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (fetchError) throw fetchError;
+      
+      // Atualizar o imóvel no Supabase
+      const { error } = await supabase
+        .from('imoveis')
+        .update({ 
+          status, 
+          atualizado_em: new Date().toISOString()
+        })
+        .eq('id', id);
+      
+      if (error) throw error;
       
       // Atualizar o estado com o novo status
       setImoveis(prevImoveis => 
-        prevImoveis.map(imovel => 
-          imovel.id === id 
-            ? { ...imovel, status, atualizado_em: new Date().toISOString() }
-            : imovel
-        )
+        prevImoveis.map(imovel => {
+          if (imovel.id === id) {
+            return {
+              ...imovel, 
+              status: status as Types.Imovel['status'],
+              atualizado_em: new Date().toISOString()
+            };
+          }
+          return imovel;
+        })
       );
       
+      // Criar notificação para o proprietário
+      if (status === 'ativo' && imovelData.status !== 'ativo') {
+        // Notificar aprovação do imóvel
+        const { error: notificationError } = await supabase
+          .from('notificacoes')
+          .insert({
+            user_id: imovelData.user_id,
+            tipo: 'sistema',
+            titulo: 'Imóvel aprovado',
+            conteudo: `Seu imóvel "${imovelData.titulo}" foi aprovado pelo administrador e já está disponível para visualização.`,
+            link: `/anuncios/detalhes/${id}`,
+            lida: false,
+            criado_em: new Date().toISOString()
+          });
+        
+        if (notificationError) {
+          console.error('Erro ao criar notificação:', notificationError);
+        }
+      } else if (status === 'inativo' && imovelData.status !== 'inativo') {
+        // Notificar inativação do imóvel
+        const { error: notificationError } = await supabase
+          .from('notificacoes')
+          .insert({
+            user_id: imovelData.user_id,
+            tipo: 'sistema',
+            titulo: 'Imóvel inativado',
+            conteudo: `Seu imóvel "${imovelData.titulo}" foi inativado pelo administrador. Entre em contato para mais informações.`,
+            link: `/anuncios/detalhes/${id}`,
+            lida: false,
+            criado_em: new Date().toISOString()
+          });
+        
+        if (notificationError) {
+          console.error('Erro ao criar notificação:', notificationError);
+        }
+      }
+      
+      const statusMessages = {
+        ativo: 'Imóvel ativado com sucesso',
+        inativo: 'Imóvel inativado',
+        vendido: 'Imóvel marcado como vendido',
+        permutado: 'Imóvel marcado como permutado'
+      };
+      
+      toast.success(statusMessages[status]);
       return true;
     } catch (error) {
       console.error('Erro ao alterar status do imóvel:', error);
+      toast.error('Não foi possível alterar o status do imóvel');
       return false;
     }
   };
@@ -881,13 +953,27 @@ export const SupabaseProvider = ({ children }: { children: React.ReactNode }) =>
   // Função para alterar o status de uma proposta
   const alterarStatusProposta = async (id: string, status: 'pendente' | 'aceita' | 'recusada' | 'cancelada') => {
     try {
+      // Buscar informações da proposta
+      const { data: proposta, error: fetchError } = await supabase
+        .from('propostas')
+        .select(`
+          *,
+          imovel_origem:imoveis!imovel_origem_id (*),
+          imovel_destino:imoveis!imovel_destino_id (*)
+        `)
+        .eq('id', id)
+        .single();
+      
+      if (fetchError) throw fetchError;
+      
       const now = new Date().toISOString();
       
+      // Atualizar status no Supabase
       const { error } = await supabase
         .from('propostas')
         .update({ 
           status,
-          data_atualizacao: now
+          atualizado_em: now
         })
         .eq('id', id);
 
@@ -895,10 +981,85 @@ export const SupabaseProvider = ({ children }: { children: React.ReactNode }) =>
       
       // Atualizar a lista de propostas localmente
       setPropostas(prevPropostas => 
-        prevPropostas.map(proposta => 
-          proposta.id === id ? { ...proposta, status, data_atualizacao: now } : proposta
+        prevPropostas.map(p => 
+          p.id === id ? { ...p, status, atualizado_em: now } : p
         )
       );
+      
+      // Criar notificação com base no status
+      if (status === 'aceita') {
+        // Notificar aceitação da proposta para o usuário de origem
+        await supabase
+          .from('notificacoes')
+          .insert({
+            user_id: proposta.user_origem_id,
+            tipo: 'proposta',
+            titulo: 'Proposta aceita',
+            conteudo: `Sua proposta de permuta para o imóvel "${proposta.imovel_destino.titulo}" foi aceita.`,
+            link: `/propostas/${id}`,
+            lida: false,
+            criado_em: now
+          });
+        
+        // Atualizar status dos imóveis para "permutado"
+        await Promise.all([
+          supabase
+            .from('imoveis')
+            .update({ 
+              status: 'permutado', 
+              atualizado_em: now 
+            })
+            .eq('id', proposta.imovel_origem_id),
+          
+          supabase
+            .from('imoveis')
+            .update({ 
+              status: 'permutado', 
+              atualizado_em: now 
+            })
+            .eq('id', proposta.imovel_destino_id)
+        ]);
+        
+        // Atualizar estado local dos imóveis
+        setImoveis(prevImoveis => 
+          prevImoveis.map(imovel => {
+            if (imovel.id === proposta.imovel_origem_id || imovel.id === proposta.imovel_destino_id) {
+              return {
+                ...imovel,
+                status: 'permutado' as Types.Imovel['status'],
+                atualizado_em: now
+              };
+            }
+            return imovel;
+          })
+        );
+      } else if (status === 'recusada') {
+        // Notificar recusa da proposta para o usuário de origem
+        await supabase
+          .from('notificacoes')
+          .insert({
+            user_id: proposta.user_origem_id,
+            tipo: 'proposta',
+            titulo: 'Proposta recusada',
+            conteudo: `Sua proposta de permuta para o imóvel "${proposta.imovel_destino.titulo}" foi recusada.`,
+            link: `/propostas/${id}`,
+            lida: false,
+            criado_em: now
+          });
+      } else if (status === 'cancelada') {
+        // Notificar cancelamento para o usuário de destino
+        await supabase
+          .from('notificacoes')
+          .insert({
+            user_id: proposta.user_destino_id,
+            tipo: 'proposta',
+            titulo: 'Proposta cancelada',
+            conteudo: `A proposta de permuta para o seu imóvel "${proposta.imovel_destino.titulo}" foi cancelada.`,
+            link: `/propostas/${id}`,
+            lida: false,
+            criado_em: now
+          });
+      }
       
       const statusMessages = {
         pendente: 'Proposta marcada como pendente',

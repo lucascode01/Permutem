@@ -8,11 +8,12 @@ import { FaEye, FaEyeSlash, FaUser, FaEnvelope, FaLock, FaIdCard, FaGoogle, FaFa
 import PageHeader from '../components/PageHeader';
 import HydrationFix from '../components/HydrationFix';
 import { useAuth } from '../contexts/AuthContext';
+import { toast } from 'react-hot-toast';
 
 export default function CadastroPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [userType, setUserType] = useState('proprietario');
+  const [userType, setUserType] = useState<'proprietario' | 'corretor' | 'admin'>('proprietario');
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -32,7 +33,7 @@ export default function CadastroPage() {
   const [isAppleDevice, setIsAppleDevice] = useState(false);
   
   const router = useRouter();
-  const { register, registerWithSocial } = useAuth();
+  const { signUp, signInWithProvider } = useAuth();
 
   // Detectar se é um dispositivo Apple
   useEffect(() => {
@@ -48,7 +49,7 @@ export default function CadastroPage() {
     setShowConfirmPassword(!showConfirmPassword);
   };
 
-  const handleUserTypeChange = (type: string) => {
+  const handleUserTypeChange = (type: 'proprietario' | 'corretor' | 'admin') => {
     setUserType(type);
   };
 
@@ -129,27 +130,35 @@ export default function CadastroPage() {
     setIsLoading(true);
     
     try {
-      const success = await register(
-        formData.email,
-        formData.firstName,
-        formData.lastName,
-        userType,
-        formData.password
-      );
+      // Fazer a requisição diretamente para a API de registro
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          primeiro_nome: formData.firstName,
+          ultimo_nome: formData.lastName,
+          tipo_usuario: userType
+        })
+      });
       
-      if (success) {
-        router.push('/selecionar-plano');
-      } else {
-        setErrors(prev => ({
-          ...prev, 
-          general: 'Não foi possível completar o cadastro. Por favor, tente novamente.'
-        }));
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro no cadastro');
       }
-    } catch (error) {
+      
+      // Cadastro bem-sucedido
+      toast.success('Cadastro realizado com sucesso! Verifique seu email para confirmar.');
+      router.push('/verificacao-email');
+    } catch (error: any) {
       console.error('Erro no cadastro:', error);
       setErrors(prev => ({
         ...prev, 
-        general: 'Ocorreu um erro durante o cadastro. Por favor, tente novamente.'
+        general: error.message || 'Ocorreu um erro durante o cadastro. Por favor, tente novamente.'
       }));
     } finally {
       setIsLoading(false);
@@ -159,16 +168,9 @@ export default function CadastroPage() {
   const handleSocialRegister = async (provider: 'google' | 'facebook' | 'apple') => {
     setErrors(prev => ({ ...prev, general: '' }));
     try {
-      const success = await registerWithSocial(provider, userType);
-      if (success) {
-        router.push('/selecionar-plano');
-      } else {
-        setErrors(prev => ({
-          ...prev,
-          general: `Não foi possível fazer cadastro com ${provider}. Por favor, tente novamente.`
-        }));
-      }
-    } catch (error) {
+      await signInWithProvider(provider);
+      // Redirecionamento será tratado pelo callback do Supabase
+    } catch (error: any) {
       console.error(`Erro no cadastro com ${provider}:`, error);
       setErrors(prev => ({
         ...prev,

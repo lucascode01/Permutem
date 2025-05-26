@@ -227,56 +227,13 @@ export async function checkSubscriptionStatus(userId: string): Promise<{
       };
     }
     
-    // Se o usuário não tiver assinatura, criar uma assinatura simulada
-    const demoSubscription: Subscription = {
-      id: `sub_demo_${Date.now()}`,
-      status: 'active',
-      planoId: 'professional', // Plano profissional por padrão para demonstração
-      expiracao: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 dias
-      startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), // Iniciado há 30 dias
-      autoRenew: true,
-      asaasId: `asaas_sub_demo_${Date.now()}` // ID simulado do Asaas
-    };
-    
-    // Salvar a assinatura demo
-    mockSubscriptions.set(userId, demoSubscription);
-    
-    // Criar histórico de pagamentos simulado
-    const demoPastDate1 = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
-    const demoPastDate2 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    
-    const demoPayments: Payment[] = [
-      {
-        id: `pay_demo_1`,
-        subscriptionId: demoSubscription.id,
-        amount: getPlanPrice(demoSubscription.planoId),
-        status: 'paid',
-        paymentMethod: 'card',
-        date: demoPastDate1.toISOString(),
-        description: `Assinatura Plano ${getPlanName(demoSubscription.planoId)}`,
-        asaasId: `asaas_pay_demo_1`
-      },
-      {
-        id: `pay_demo_2`,
-        subscriptionId: demoSubscription.id,
-        amount: getPlanPrice(demoSubscription.planoId),
-        status: 'paid',
-        paymentMethod: 'card',
-        date: demoPastDate2.toISOString(),
-        description: `Renovação Plano ${getPlanName(demoSubscription.planoId)}`,
-        asaasId: `asaas_pay_demo_2`
-      }
-    ];
-    
-    // Salvar pagamentos demo
-    mockPayments.set(userId, demoPayments);
-    
-    return {
-      active: true,
-      planoId: demoSubscription.planoId,
-      expiracao: demoSubscription.expiracao,
-      autoRenew: demoSubscription.autoRenew,
-      asaasId: demoSubscription.asaasId
+    // Para novos usuários ou usuários sem assinatura, retornar sempre inativo
+    // Não criar mais uma assinatura demo automática
+    return { 
+      active: false,
+      planoId: undefined,
+      expiracao: undefined,
+      autoRenew: false 
     };
   } catch (error) {
     console.error('Erro ao verificar status da assinatura:', error);

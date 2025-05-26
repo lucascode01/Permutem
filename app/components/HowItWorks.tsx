@@ -60,7 +60,7 @@ const HowItWorks = () => {
       icon: <FaBuilding />,
       stepNumber: 3,
       buttonText: 'Conheça os planos',
-      buttonLink: '#',
+      buttonLink: '/planos/visualizar',
     },
   ];
 

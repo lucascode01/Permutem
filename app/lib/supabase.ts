@@ -2,10 +2,10 @@ import { createClient } from '@supabase/supabase-js';
 // Importar tipos do arquivo types.ts
 import type * as Types from './types';
 
-// Configuração para desenvolvimento
+// Configuração para conexão com o Supabase
 const devConfig = {
-  supabaseUrl: 'https://lvmiyeudjowgtglwmodz.supabase.co',
-  supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2bWl5ZXVkam93Z3RnbHdtb2R6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMyMDA4NTMsImV4cCI6MjA1ODc3Njg1M30.N0gPGMGXOi2SqGX6pWGWBex1sf_S4YzK2FpE2v2Mkq0'
+  supabaseUrl: 'https://pclnvditmctgsktdzlta.supabase.co',
+  supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjbG52ZGl0bWN0Z3NrdGR6bHRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2NzQ0MzAsImV4cCI6MjA2MzI1MDQzMH0.ECUVBH5l7EyZTcKkh6iLiip8C-h_G3PIq9eY7teHArk'
 };
 
 // URL e chave do Supabase
@@ -285,6 +285,12 @@ export const createTableScripts = {
       lida BOOLEAN NOT NULL DEFAULT FALSE,
       criado_em TIMESTAMP WITH TIME ZONE DEFAULT NOW()
     );
+    
+    -- Índice para otimizar buscas por user_id
+    CREATE INDEX IF NOT EXISTS idx_notificacoes_user_id ON notificacoes(user_id);
+    
+    -- Índice para otimizar buscas de não lidas
+    CREATE INDEX IF NOT EXISTS idx_notificacoes_lida ON notificacoes(user_id, lida) WHERE lida = FALSE;
   `
 };
 

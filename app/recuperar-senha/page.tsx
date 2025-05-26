@@ -3,41 +3,44 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import PageHeader from '../components/PageHeader';
-import HydrationFix from '../components/HydrationFix';
+import { FaEnvelope, FaArrowLeft } from 'react-icons/fa';
+import { toast } from 'react-hot-toast';
+import { useAuth } from '@/app/contexts/AuthContext';
+import PageHeader from '@/app/components/PageHeader';
+import HydrationFix from '@/app/components/HydrationFix';
 
 export default function RecuperarSenhaPage() {
   const [email, setEmail] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
-  
-  const router = useRouter();
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEmail(e.target.value);
-  };
+  const [submitting, setSubmitting] = useState(false);
+  const [emailEnviado, setEmailEnviado] = useState(false);
+  const { resetPassword } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setSuccessMessage('');
-    setIsLoading(true);
+    
+    if (!email) {
+      toast.error('Por favor, informe seu email');
+      return;
+    }
+    
+    setSubmitting(true);
     
     try {
-      // Simulação da API de envio do e-mail de recuperação
-      // Em um ambiente real, isso chamaria sua API real
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const { error } = await resetPassword(email);
       
-      // Simular sucesso
-      setSuccessMessage(`Um link para redefinir sua senha foi enviado para ${email}. Por favor, verifique sua caixa de entrada e siga as instruções.`);
-      setEmail('');
-    } catch (error) {
-      console.error('Erro ao solicitar recuperação de senha:', error);
-      setError('Não foi possível processar sua solicitação. Por favor, tente novamente mais tarde.');
+      if (error) {
+        toast.error(error.message || 'Erro ao enviar email de recuperação');
+        console.error('Erro ao recuperar senha:', error);
+        return;
+      }
+      
+      setEmailEnviado(true);
+      toast.success('Email de recuperação enviado com sucesso!');
+    } catch (err) {
+      console.error('Erro ao processar recuperação de senha:', err);
+      toast.error('Ocorreu um erro ao processar sua solicitação');
     } finally {
-      setIsLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -45,18 +48,11 @@ export default function RecuperarSenhaPage() {
     <>
       <HydrationFix />
       <PageHeader />
-      <main className="min-h-screen bg-gray-50 flex flex-col justify-center items-center">
+      <main className="min-h-screen bg-gray-50 flex flex-col justify-center items-center pt-28 pb-12">
         <div className="w-full max-w-md px-4 py-8 sm:px-0">
           <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
             <div className="px-6 py-8 sm:px-10">
-              <div className="flex justify-between items-center mb-8">
-                <Link href="/login" className="flex items-center text-primary hover:text-primary-dark transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                  </svg>
-                  <span className="text-sm font-medium">Voltar para o login</span>
-                </Link>
-                
+              <div className="flex justify-center mb-8">
                 <Image 
                   src="/images/permutem-logo.png" 
                   alt="Permutem" 
@@ -66,53 +62,69 @@ export default function RecuperarSenhaPage() {
                 />
               </div>
               
-              <h1 className="text-2xl font-bold mb-3 text-center text-gray-800">Recuperar Senha</h1>
-              <p className="text-gray-600 mb-8 text-center text-sm">
-                Informe seu e-mail abaixo e enviaremos um link para você redefinir sua senha.
-              </p>
-              
-              {error && (
-                <div className="bg-red-50 text-red-600 p-3 rounded-md mb-6 text-sm">
-                  {error}
+              {!emailEnviado ? (
+                <>
+                  <h2 className="text-xl font-bold text-center text-gray-800 mb-6">
+                    Recuperar Senha
+                  </h2>
+                  
+                  <p className="text-sm text-gray-600 mb-6 text-center">
+                    Digite seu email abaixo e enviaremos um link para redefinir sua senha.
+                  </p>
+                  
+                  <form onSubmit={handleSubmit}>
+                    <div className="mb-6">
+                      <label htmlFor="email" className="block text-gray-700 text-sm font-medium mb-1">
+                        E-mail
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                          <FaEnvelope className="h-5 w-5 text-gray-400" />
+                        </div>
+                        <input
+                          type="email"
+                          id="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="w-full pl-10 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0071ce]"
+                          placeholder="Digite seu e-mail"
+                          required
+                          disabled={submitting}
+                        />
+                      </div>
+                    </div>
+                    
+                    <button
+                      type="submit"
+                      className="w-full bg-[#0071ce] hover:bg-[#005fad] text-white font-medium py-3 px-4 rounded-lg transition-colors"
+                      disabled={submitting}
+                    >
+                      {submitting ? 'Enviando...' : 'Enviar link de recuperação'}
+                    </button>
+                  </form>
+                </>
+              ) : (
+                <div className="text-center">
+                  <div className="bg-green-100 text-green-800 px-4 py-3 rounded-lg mb-6">
+                    <p className="font-medium">Email enviado com sucesso!</p>
+                    <p className="text-sm mt-1">Verifique sua caixa de entrada e siga as instruções para redefinir sua senha.</p>
+                  </div>
+                  
+                  <p className="text-gray-600 text-sm">
+                    Não recebeu o email? Verifique sua pasta de spam ou tente novamente em alguns minutos.
+                  </p>
                 </div>
               )}
               
-              {successMessage && (
-                <div className="bg-green-50 text-green-600 p-4 rounded-md mb-6 text-sm">
-                  {successMessage}
-                </div>
-              )}
-              
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                  <label htmlFor="email" className="block text-gray-700 text-sm font-medium mb-2">E-mail cadastrado</label>
-                  <input 
-                    type="email" 
-                    id="email" 
-                    name="email"
-                    value={email}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                    placeholder="Digite seu e-mail" 
-                    required
-                  />
-                </div>
-                
-                <button 
-                  type="submit" 
-                  disabled={isLoading}
-                  className="w-full bg-primary hover:bg-primary-dark text-white font-bold py-3 px-6 rounded-lg transition-colors disabled:opacity-70 shadow-sm"
+              <div className="mt-6 pt-4 border-t border-gray-200">
+                <Link 
+                  href="/login" 
+                  className="flex items-center justify-center text-sm text-[#0071ce] hover:text-[#005fad]"
                 >
-                  {isLoading ? 'Enviando...' : 'Enviar Link de Recuperação'}
-                </button>
-                
-                <div className="text-center text-gray-600 pt-2">
-                  <span className="text-sm">Lembrou sua senha?</span>{" "}
-                  <Link href="/login" className="text-primary font-medium hover:text-primary-dark transition-colors text-sm">
-                    Voltar para o login
-                  </Link>
-                </div>
-              </form>
+                  <FaArrowLeft className="mr-2" />
+                  Voltar para login
+                </Link>
+              </div>
             </div>
           </div>
         </div>

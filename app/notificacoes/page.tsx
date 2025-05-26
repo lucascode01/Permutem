@@ -1,365 +1,295 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { FaBell, FaEnvelope, FaExchangeAlt, FaHeart, FaEye, FaCommentAlt, FaTrash, FaCheck } from 'react-icons/fa';
+import { FaArrowLeft, FaBell, FaRegBell, FaCheck, FaTimes, FaClock, FaExclamationTriangle } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
+import { notificacoesService } from '../lib/services/notificacoes-service';
+import { Notificacao } from '../lib/types';
+import { toast } from 'react-hot-toast';
+import { checkSubscriptionStatus } from '../lib/checkout';
 
-// Tipo para notificações
-type Notification = {
-  id: string;
-  type: 'proposal' | 'message' | 'favorite' | 'view' | 'system';
-  title: string;
-  message: string;
-  date: string;
-  read: boolean;
-  actionLink?: string;
-  propertyId?: string;
-  propertyTitle?: string;
-  senderName?: string;
-};
-
-export default function NotificationsPage() {
-  const { user, isLoading } = useAuth();
+export default function NotificacoesPage() {
   const router = useRouter();
-  
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('all');
-  
+  const { user, loading } = useAuth();
+  const [notificacoes, setNotificacoes] = useState<Notificacao[]>([]);
+  const [isLoadingNotificacoes, setIsLoadingNotificacoes] = useState(true);
+  const [erro, setErro] = useState<string | null>(null);
+  const [planoAtivo, setPlanoAtivo] = useState<boolean>(false);
+  const [verificandoPlano, setVerificandoPlano] = useState<boolean>(true);
+
+  // Redirecionar se o usuário não estiver logado
   useEffect(() => {
-    if (!isLoading && !user) {
+    if (!loading && !user) {
       router.push('/login');
-      return;
     }
-    
-    // Simular carregamento de dados
-    const loadData = async () => {
-      setLoading(true);
+  }, [user, loading, router]);
+
+  // Verificar se o usuário tem um plano ativo
+  useEffect(() => {
+    const verificarPlano = async () => {
+      if (!user?.id) {
+        setVerificandoPlano(false);
+        return;
+      }
+
+      try {
+        console.log('Verificando status do plano do usuário');
+        const status = await checkSubscriptionStatus(user.id);
+        setPlanoAtivo(status.active);
+        console.log('Status do plano:', status.active ? 'Ativo' : 'Inativo');
+      } catch (error) {
+        console.error('Erro ao verificar status do plano:', error);
+        setPlanoAtivo(false);
+      } finally {
+        setVerificandoPlano(false);
+      }
+    };
+
+    if (user?.id) {
+      verificarPlano();
+    } else {
+      setVerificandoPlano(false);
+    }
+  }, [user]);
+  
+  // Carregar notificações
+  useEffect(() => {
+    const carregarNotificacoes = async () => {
+      if (!user?.id) {
+        console.log('Usuário não logado, não carregando notificações');
+        setIsLoadingNotificacoes(false);
+        return;
+      }
+
+      if (!planoAtivo) {
+        console.log('Usuário sem plano ativo, não carregando notificações');
+        setIsLoadingNotificacoes(false);
+        return;
+      }
       
-      // Simular requisição ao backend
-      await new Promise(resolve => setTimeout(resolve, 800));
+      setIsLoadingNotificacoes(true);
+      setErro(null);
       
-      // Dados simulados de notificações
-      const mockNotifications: Notification[] = [
-        {
-          id: '1',
-          type: 'proposal',
-          title: 'Nova proposta de permuta',
-          message: 'João Silva enviou uma proposta de permuta para seu imóvel "Apartamento em São Paulo".',
-          date: '2023-11-20T14:30:00',
-          read: false,
-          actionLink: '/propostas/3',
-          propertyId: '1',
-          propertyTitle: 'Apartamento em São Paulo',
-          senderName: 'João Silva'
-        },
-        {
-          id: '2',
-          type: 'message',
-          title: 'Nova mensagem',
-          message: 'Maria Oliveira enviou uma mensagem sobre seu imóvel "Casa em Florianópolis".',
-          date: '2023-11-19T10:15:00',
-          read: true,
-          actionLink: '/mensagens/5',
-          propertyId: '2',
-          propertyTitle: 'Casa em Florianópolis',
-          senderName: 'Maria Oliveira'
-        },
-        {
-          id: '3',
-          type: 'favorite',
-          title: 'Novo favorito',
-          message: 'Seu imóvel "Terreno em Curitiba" foi adicionado aos favoritos por 3 usuários nas últimas 24 horas.',
-          date: '2023-11-18T20:45:00',
-          read: false,
-          propertyId: '3',
-          propertyTitle: 'Terreno em Curitiba'
-        },
-        {
-          id: '4',
-          type: 'view',
-          title: 'Seu anúncio está em alta!',
-          message: 'Seu imóvel "Apartamento em São Paulo" recebeu 15 visualizações nas últimas 24 horas.',
-          date: '2023-11-17T16:20:00',
-          read: true,
-          propertyId: '1',
-          propertyTitle: 'Apartamento em São Paulo'
-        },
-        {
-          id: '5',
-          type: 'system',
-          title: 'Seu plano foi renovado',
-          message: 'Seu plano Premium foi renovado automaticamente e é válido até 15/12/2023.',
-          date: '2023-11-15T08:00:00',
-          read: true,
-          actionLink: '/perfil/plano'
-        },
-        {
-          id: '6',
-          type: 'system',
-          title: 'Novos imóveis compatíveis',
-          message: 'Encontramos 5 novos imóveis que combinam com suas preferências de permuta.',
-          date: '2023-11-14T12:10:00',
-          read: true,
-          actionLink: '/buscar-imoveis?q=compatíveis'
-        },
-        {
-          id: '7',
-          type: 'proposal',
-          title: 'Proposta aceita',
-          message: 'Ana Paula aceitou sua proposta de permuta para o imóvel "Casa na Praia".',
-          date: '2023-11-13T11:30:00',
-          read: false,
-          actionLink: '/propostas/2',
-          propertyId: '4',
-          propertyTitle: 'Casa na Praia',
-          senderName: 'Ana Paula'
+      try {
+        console.log('Carregando notificações para usuário:', user.id);
+        const { data, error } = await notificacoesService.listarNotificacoes(user.id);
+        
+        if (error) {
+          console.error('Erro ao carregar notificações:', error);
+          setErro('Não foi possível carregar suas notificações. Tente novamente mais tarde.');
+          toast.error('Erro ao carregar notificações');
+          setNotificacoes([]);
+          return;
         }
-      ];
-      
-      setNotifications(mockNotifications);
-      setLoading(false);
+        
+        console.log('Notificações carregadas:', data);
+        setNotificacoes(data || []);
+      } catch (error) {
+        console.error('Erro inesperado ao carregar notificações:', error);
+        setErro('Ocorreu um erro inesperado. Tente novamente mais tarde.');
+        toast.error('Erro ao processar notificações');
+        setNotificacoes([]);
+      } finally {
+        console.log('Finalizando carregamento de notificações');
+        setIsLoadingNotificacoes(false);
+      }
     };
     
-    loadData();
-  }, [user, isLoading, router]);
-  
-  // Filtrar notificações
-  const filteredNotifications = (() => {
-    if (filter === 'all') return notifications;
-    if (filter === 'unread') return notifications.filter(notification => !notification.read);
-    return notifications.filter(notification => notification.type === filter);
-  })();
-  
-  // Formatar data relativa
-  const formatRelativeTime = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-    
-    if (diffInSeconds < 60) return 'agora mesmo';
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} min atrás`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} h atrás`;
-    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} dias atrás`;
-    
-    return date.toLocaleDateString('pt-BR');
-  };
-  
-  // Marcar todas como lidas
-  const markAllAsRead = () => {
-    setNotifications(prevNotifications => 
-      prevNotifications.map(notification => ({
-        ...notification,
-        read: true
-      }))
-    );
-  };
-  
-  // Marcar uma como lida
-  const markAsRead = (id: string) => {
-    setNotifications(prevNotifications => 
-      prevNotifications.map(notification => 
-        notification.id === id 
-          ? { ...notification, read: true } 
-          : notification
-      )
-    );
-  };
-  
-  // Excluir notificação
-  const deleteNotification = (id: string) => {
-    setNotifications(prevNotifications => 
-      prevNotifications.filter(notification => notification.id !== id)
-    );
-  };
-  
-  // Obter ícone com base no tipo de notificação
-  const getNotificationIcon = (type: string) => {
-    switch (type) {
-      case 'proposal':
-        return <FaExchangeAlt className="text-blue-500" />;
-      case 'message':
-        return <FaEnvelope className="text-green-500" />;
-      case 'favorite':
-        return <FaHeart className="text-red-500" />;
-      case 'view':
-        return <FaEye className="text-purple-500" />;
-      case 'system':
-        return <FaBell className="text-orange-500" />;
-      default:
-        return <FaBell className="text-gray-500" />;
+    if (user?.id && planoAtivo && !verificandoPlano) {
+      console.log('Iniciando carregamento de notificações');
+      carregarNotificacoes();
+    } else if (!verificandoPlano) {
+      console.log('Não carregando notificações: usuário sem plano ativo ou não logado');
+      setIsLoadingNotificacoes(false);
+    }
+  }, [user, planoAtivo, verificandoPlano]);
+
+  const marcarComoLida = async (id: string) => {
+    try {
+      await notificacoesService.marcarComoLida(id);
+      
+      // Atualizar o estado localmente
+      setNotificacoes(prev => 
+        prev.map(notificacao => 
+          notificacao.id === id 
+            ? { ...notificacao, lida: true } 
+            : notificacao
+        )
+      );
+      
+      toast.success('Notificação marcada como lida');
+    } catch (error) {
+      console.error('Erro ao marcar notificação como lida:', error);
+      toast.error('Não foi possível atualizar a notificação');
     }
   };
-  
-  // Contagem de não lidas
-  const unreadCount = notifications.filter(notification => !notification.read).length;
-  
-  if (isLoading || loading) {
+
+  const removerNotificacao = async (id: string) => {
+    try {
+      await notificacoesService.removerNotificacao(id);
+      
+      // Remover do estado local
+      setNotificacoes(prev => prev.filter(notificacao => notificacao.id !== id));
+      
+      toast.success('Notificação removida');
+    } catch (error) {
+      console.error('Erro ao remover notificação:', error);
+      toast.error('Não foi possível remover a notificação');
+    }
+  };
+
+  const formatarData = (dataString: string) => {
+    try {
+      const data = new Date(dataString);
+      const agora = new Date();
+      
+      // Diferença em milissegundos
+      const diff = agora.getTime() - data.getTime();
+      
+      // Menos de 24 horas
+      if (diff < 24 * 60 * 60 * 1000) {
+        // Menos de 1 hora
+        if (diff < 60 * 60 * 1000) {
+          const minutos = Math.floor(diff / (60 * 1000));
+          return `${minutos} ${minutos === 1 ? 'minuto' : 'minutos'} atrás`;
+        }
+        
+        const horas = Math.floor(diff / (60 * 60 * 1000));
+        return `${horas} ${horas === 1 ? 'hora' : 'horas'} atrás`;
+      }
+      
+      // Menos de 7 dias
+      if (diff < 7 * 24 * 60 * 60 * 1000) {
+        const dias = Math.floor(diff / (24 * 60 * 60 * 1000));
+        return `${dias} ${dias === 1 ? 'dia' : 'dias'} atrás`;
+      }
+      
+      // Data formatada
+      return data.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    } catch (error) {
+      console.error('Erro ao formatar data:', error, dataString);
+      return 'Data desconhecida';
+    }
+  };
+
+  // Renderizar um loading state enquanto verifica autenticação
+  if (loading || verificandoPlano) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#4CAF50]"></div>
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#4CAF50] mx-auto mb-4"></div>
+          <p className="text-gray-600">Verificando autenticação...</p>
+        </div>
       </div>
     );
   }
-  
+
   return (
-    <div className="min-h-screen bg-gray-50 pt-16">
-      <div className="container mx-auto max-w-4xl px-4 py-6">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800">Notificações</h1>
-            <p className="text-gray-600">
-              {unreadCount === 0 
-                ? 'Você não tem novas notificações' 
-                : `Você tem ${unreadCount} ${unreadCount === 1 ? 'nova notificação' : 'novas notificações'}`}
-            </p>
-          </div>
-          
-          {unreadCount > 0 && (
-            <button 
-              onClick={markAllAsRead}
-              className="px-4 py-2 bg-[#4CAF50] text-white rounded-md hover:bg-[#43a047] transition-colors"
-            >
-              Marcar todas como lidas
-            </button>
-          )}
-        </div>
-        
-        {/* Filtros */}
-        <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-          <div className="flex space-x-2 overflow-x-auto pb-2">
-            <button 
-              onClick={() => setFilter('all')}
-              className={`px-4 py-2 rounded-md text-sm font-medium whitespace-nowrap ${filter === 'all' ? 'bg-[#4CAF50] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-            >
-              Todas
-            </button>
-            <button 
-              onClick={() => setFilter('unread')}
-              className={`px-4 py-2 rounded-md text-sm font-medium whitespace-nowrap ${filter === 'unread' ? 'bg-[#4CAF50] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-            >
-              Não lidas
-              {unreadCount > 0 && (
-                <span className="ml-2 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
-                  {unreadCount}
-                </span>
-              )}
-            </button>
-            <button 
-              onClick={() => setFilter('proposal')}
-              className={`px-4 py-2 rounded-md text-sm font-medium whitespace-nowrap flex items-center ${filter === 'proposal' ? 'bg-[#4CAF50] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-            >
-              <FaExchangeAlt className={`mr-1 ${filter === 'proposal' ? 'text-white' : 'text-blue-500'}`} />
-              Propostas
-            </button>
-            <button 
-              onClick={() => setFilter('message')}
-              className={`px-4 py-2 rounded-md text-sm font-medium whitespace-nowrap flex items-center ${filter === 'message' ? 'bg-[#4CAF50] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-            >
-              <FaEnvelope className={`mr-1 ${filter === 'message' ? 'text-white' : 'text-green-500'}`} />
-              Mensagens
-            </button>
-            <button 
-              onClick={() => setFilter('system')}
-              className={`px-4 py-2 rounded-md text-sm font-medium whitespace-nowrap flex items-center ${filter === 'system' ? 'bg-[#4CAF50] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-            >
-              <FaBell className={`mr-1 ${filter === 'system' ? 'text-white' : 'text-orange-500'}`} />
-              Sistema
-            </button>
-          </div>
-        </div>
-        
-        {/* Lista de notificações */}
-        <div className="space-y-4">
-          {filteredNotifications.length === 0 ? (
-            <div className="bg-white rounded-lg shadow-md p-6 text-center">
-              <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                <FaBell className="text-gray-400 w-8 h-8" />
-              </div>
-              <h3 className="text-gray-800 font-medium mb-2">Nenhuma notificação encontrada</h3>
-              <p className="text-gray-600">
-                {filter === 'all' 
-                  ? 'Você não tem notificações no momento.' 
-                  : 'Nenhuma notificação corresponde ao filtro selecionado.'}
-              </p>
+    <div className="min-h-screen bg-white">
+      {/* Cabeçalho */}
+      <header className="bg-white shadow-md px-4 py-3 flex items-center">
+        <button 
+          onClick={() => router.back()}
+          className="mr-4 text-gray-600 hover:text-gray-900 transition"
+        >
+          <FaArrowLeft size={20} />
+        </button>
+        <h1 className="text-xl font-semibold text-gray-800 flex items-center">
+          <FaBell className="mr-2 text-[#4CAF50]" /> 
+          Notificações
+        </h1>
+      </header>
+
+      {/* Conteúdo */}
+      <div className="container mx-auto px-4 py-6 max-w-2xl">
+        {isLoadingNotificacoes ? (
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#4CAF50] mx-auto mb-4"></div>
+              <p className="text-gray-600">Carregando notificações...</p>
             </div>
-          ) : (
-            filteredNotifications.map(notification => (
+          </div>
+        ) : !planoAtivo ? (
+          <div className="text-center py-10">
+            <FaExclamationTriangle className="mx-auto mb-4 text-yellow-500" size={40} />
+            <h2 className="text-xl font-semibold text-gray-700 mb-2">Plano Inativo</h2>
+            <p className="text-gray-600 mb-6">
+              Você não possui um plano ativo. Para acessar as notificações, é necessário assinar um plano.
+            </p>
+            <Link 
+              href="/dashboard/escolher-plano" 
+              className="px-4 py-2 bg-[#4CAF50] text-white rounded-md hover:bg-[#3d9840] transition"
+            >
+              Ver planos disponíveis
+            </Link>
+          </div>
+        ) : erro ? (
+          <div className="text-center py-10">
+            <FaExclamationTriangle className="mx-auto mb-4 text-red-500" size={40} />
+            <p className="text-gray-700 mb-6">{erro}</p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-[#4CAF50] text-white rounded-md hover:bg-[#3d9840] transition"
+            >
+              Tentar novamente
+            </button>
+          </div>
+        ) : notificacoes.length === 0 ? (
+          <div className="text-center py-10">
+            <FaRegBell className="mx-auto mb-4 text-gray-400" size={50} />
+            <h2 className="text-xl font-semibold text-gray-700 mb-2">Sem notificações</h2>
+            <p className="text-gray-500">Você não tem nenhuma notificação no momento.</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {notificacoes.map(notificacao => (
               <div 
-                key={notification.id} 
-                className={`bg-white rounded-lg shadow-md overflow-hidden transition-all ${!notification.read ? 'border-l-4 border-[#4CAF50]' : ''}`}
+                key={notificacao.id} 
+                className={`border rounded-lg p-4 transition ${notificacao.lida ? 'bg-white' : 'bg-green-50'}`}
               >
-                <div className="p-4 md:p-5">
-                  <div className="flex items-start">
-                    <div className="bg-gray-100 p-3 rounded-full mr-4">
-                      {getNotificationIcon(notification.type)}
-                    </div>
-                    
-                    <div className="flex-1">
-                      <div className="flex justify-between">
-                        <h3 className="text-lg font-medium text-gray-900">{notification.title}</h3>
-                        <span className="text-sm text-gray-500">{formatRelativeTime(notification.date)}</span>
-                      </div>
-                      
-                      <p className="mt-1 text-gray-700">{notification.message}</p>
-                      
-                      <div className="mt-3 flex justify-between items-center">
-                        <div className="flex space-x-2">
-                          {notification.actionLink && (
-                            <button 
-                              onClick={() => {
-                                markAsRead(notification.id);
-                                router.push(notification.actionLink!);
-                              }}
-                              className="px-3 py-1 bg-[#4CAF50] text-white text-sm rounded-md hover:bg-[#43a047] transition-colors"
-                            >
-                              Ver detalhes
-                            </button>
-                          )}
-                          
-                          {!notification.read && (
-                            <button 
-                              onClick={() => markAsRead(notification.id)}
-                              className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-md hover:bg-gray-200 transition-colors flex items-center"
-                            >
-                              <FaCheck className="mr-1" />
-                              Marcar como lida
-                            </button>
-                          )}
-                        </div>
-                        
-                        <button 
-                          onClick={() => deleteNotification(notification.id)}
-                          className="text-gray-400 hover:text-red-500 transition-colors"
-                          title="Excluir notificação"
-                        >
-                          <FaTrash />
-                        </button>
-                      </div>
-                    </div>
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className={`font-medium ${notificacao.lida ? 'text-gray-700' : 'text-gray-900'}`}>
+                    {notificacao.titulo}
+                  </h3>
+                  <div className="flex space-x-2">
+                    {!notificacao.lida && (
+                      <button 
+                        onClick={() => marcarComoLida(notificacao.id)}
+                        className="text-blue-600 hover:text-blue-800"
+                        title="Marcar como lida"
+                      >
+                        <FaCheck size={16} />
+                      </button>
+                    )}
+                    <button 
+                      onClick={() => removerNotificacao(notificacao.id)}
+                      className="text-red-600 hover:text-red-800"
+                      title="Remover notificação"
+                    >
+                      <FaTimes size={16} />
+                    </button>
                   </div>
                 </div>
+                <p className="text-gray-600 mb-3">{notificacao.conteudo}</p>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-gray-500 flex items-center">
+                    <FaClock className="mr-1" size={12} />
+                    {formatarData(notificacao.criado_em)}
+                  </span>
+                  {notificacao.link && (
+                    <Link href={notificacao.link} className="text-[#4CAF50] hover:underline text-sm">
+                      Ver detalhes
+                    </Link>
+                  )}
+                </div>
               </div>
-            ))
-          )}
-        </div>
-        
-        {/* Paginação (simplificada para o exemplo) */}
-        {filteredNotifications.length > 0 && (
-          <div className="mt-6 flex justify-center">
-            <button className="px-4 py-2 bg-white border border-gray-300 rounded-md text-gray-700 mx-1">
-              Anterior
-            </button>
-            <button className="px-4 py-2 bg-[#4CAF50] text-white rounded-md mx-1">
-              1
-            </button>
-            <button className="px-4 py-2 bg-white border border-gray-300 rounded-md text-gray-700 mx-1">
-              2
-            </button>
-            <button className="px-4 py-2 bg-white border border-gray-300 rounded-md text-gray-700 mx-1">
-              Próxima
-            </button>
+            ))}
           </div>
         )}
       </div>

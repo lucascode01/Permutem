@@ -4,8 +4,14 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { FaArrowLeft, FaExchangeAlt, FaMapMarkerAlt, FaHome, FaHeart, FaShareAlt, FaTh, FaList } from 'react-icons/fa';
+import { FaArrowLeft, FaExchangeAlt, FaMapMarkerAlt, FaHome, FaHeart, FaShareAlt, FaTh, FaList, FaExclamationTriangle } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
+import { imoveisService } from '../lib/services/imoveis-service';
+import { favoritosService } from '../lib/services/favoritos-service';
+import { Imovel } from '../lib/types';
+import { toast } from 'react-hot-toast';
+import { checkSubscriptionStatus } from '../lib/checkout';
+import BotaoPlanoAtivo from '../components/BotaoPlanoAtivo';
 
 type SuggestedProperty = {
   id: string;
@@ -25,116 +31,278 @@ type SuggestedProperty = {
 
 export default function SugestoesPage() {
   const router = useRouter();
-  const { user, isLoading } = useAuth();
+  const { user, loading } = useAuth();
   const [viewType, setViewType] = useState<'grid' | 'list'>('grid');
   const [suggestedProperties, setSuggestedProperties] = useState<SuggestedProperty[]>([]);
   const [userProperties, setUserProperties] = useState<any[]>([]);
   const [selectedUserProperty, setSelectedUserProperty] = useState<string | null>(null);
+  const [isLoadingProperties, setIsLoadingProperties] = useState(true);
+  const [planoAtivo, setPlanoAtivo] = useState<boolean>(false);
+  const [verificandoPlano, setVerificandoPlano] = useState<boolean>(true);
 
   // Redirecionar se o usuário não estiver logado
   useEffect(() => {
-    if (!isLoading && !user) {
+    if (!loading && !user) {
       router.push('/login');
     }
-  }, [user, isLoading, router]);
+  }, [user, loading, router]);
 
-  // Carregar imóveis do usuário (mock)
+  // Verificar se o usuário tem um plano ativo
   useEffect(() => {
-    const mockUserProperties = [
-      {
-        id: '1',
-        title: 'Meu Apartamento em Botafogo',
-        location: 'Botafogo, Rio de Janeiro',
-        price: 'R$ 450.000',
-        imageUrl: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?q=80&w=1780&auto=format&fit=crop&ixlib=rb-4.0.3',
-      },
-      {
-        id: '2',
-        title: 'Minha Casa na Barra da Tijuca',
-        location: 'Barra da Tijuca, Rio de Janeiro',
-        price: 'R$ 1.200.000',
-        imageUrl: 'https://images.unsplash.com/photo-1600607688969-a5bfcd646154?q=80&w=1770&auto=format&fit=crop&ixlib=rb-4.0.3',
+    const verificarPlano = async () => {
+      if (!user?.id) {
+        setVerificandoPlano(false);
+        return;
       }
-    ];
 
-    setUserProperties(mockUserProperties);
-    if (mockUserProperties.length > 0) {
-      setSelectedUserProperty(mockUserProperties[0].id);
+      try {
+        console.log('Verificando status do plano do usuário');
+        const status = await checkSubscriptionStatus(user.id);
+        setPlanoAtivo(status.active);
+        console.log('Status do plano:', status.active ? 'Ativo' : 'Inativo');
+      } catch (error) {
+        console.error('Erro ao verificar status do plano:', error);
+        setPlanoAtivo(false);
+      } finally {
+        setVerificandoPlano(false);
+      }
+    };
+
+    if (user?.id) {
+      verificarPlano();
+    } else {
+      setVerificandoPlano(false);
     }
-  }, []);
+  }, [user]);
 
-  // Carregar sugestões de imóveis (mock)
+  // Carregar imóveis do usuário
   useEffect(() => {
-    if (!selectedUserProperty) return;
+    const loadUserProperties = async () => {
+      if (!user?.id) {
+        console.log('Usuário não logado, não carregando imóveis');
+        setIsLoadingProperties(false);
+        return;
+      }
+      
+      if (!planoAtivo) {
+        console.log('Usuário sem plano ativo, não carregando imóveis');
+        setIsLoadingProperties(false);
+        return;
+      }
+      
+      console.log('Carregando imóveis do usuário:', user.id);
+      
+      try {
+        const { data, error } = await imoveisService.listarImoveisDoUsuario(user.id);
+        
+        if (error) {
+          console.error('Erro ao carregar imóveis do usuário:', error);
+          throw error;
+        }
+        
+        console.log('Imóveis do usuário carregados:', data?.length || 0, 'imóveis encontrados');
+        
+        if (data && data.length > 0) {
+          // Mapear os dados para o formato esperado
+          const userProps = data.map((imovel: any) => ({
+            id: imovel.id,
+            title: imovel.titulo,
+            location: `${imovel.endereco?.bairro || ''}, ${imovel.endereco?.cidade || ''}`,
+            price: formatarPreco(imovel.preco),
+            imageUrl: imovel.fotos && imovel.fotos.length > 0 
+              ? imovel.fotos[0] 
+              : '/placeholder-image.jpg'
+          }));
+          
+          setUserProperties(userProps);
+          
+          if (userProps.length > 0) {
+            console.log('Selecionando primeiro imóvel para sugestões:', userProps[0].id);
+            setSelectedUserProperty(userProps[0].id);
+          }
+        } else {
+          // Sem imóveis, mostrar lista vazia
+          console.log('Usuário não possui imóveis cadastrados');
+          setUserProperties([]);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar imóveis do usuário:', error);
+        toast.error('Não foi possível carregar seus imóveis.');
+        setUserProperties([]);
+      } finally {
+        console.log('Finalizando carregamento de imóveis do usuário');
+        setIsLoadingProperties(false);
+      }
+    };
+    
+    if (user?.id && planoAtivo && !verificandoPlano) {
+      console.log('Iniciando carregamento de imóveis do usuário');
+      loadUserProperties();
+    } else if (!verificandoPlano) {
+      console.log('Sem usuário logado/sem plano ativo, definindo loading como false');
+      setIsLoadingProperties(false);
+    }
+  }, [user, planoAtivo, verificandoPlano]);
 
-    // Simulação de dados de sugestões
-    const mockSuggestions: SuggestedProperty[] = [
-      {
-        id: '101',
-        title: 'Apartamento 3 quartos com vista para o mar',
-        location: 'Copacabana, Rio de Janeiro',
-        price: 'R$ 950.000',
-        priceUSD: 'US$ 190,000',
-        imageUrl: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?q=80&w=1780&auto=format&fit=crop&ixlib=rb-4.0.3',
-        type: 'apartamento',
-        beds: 3,
-        baths: 2,
-        area: '120m²',
-        compatibilityScore: 95,
-        isFavorite: false,
-        reasonsForMatch: ['Localização compatível', 'Valor próximo ao do seu imóvel', 'Proprietário interessado em Botafogo'],
-      },
-      {
-        id: '102',
-        title: 'Cobertura Duplex em Ipanema',
-        location: 'Ipanema, Rio de Janeiro',
-        price: 'R$ 1.500.000',
-        priceUSD: 'US$ 300,000',
-        imageUrl: 'https://images.unsplash.com/photo-1493809842364-78817add7ffb?q=80&w=1770&auto=format&fit=crop&ixlib=rb-4.0.3',
-        type: 'apartamento',
-        beds: 4,
-        baths: 3,
-        area: '200m²',
-        compatibilityScore: 82,
-        isFavorite: true,
-        reasonsForMatch: ['Proprietário aceita diferença em dinheiro', 'Busca imóveis em Botafogo'],
-      },
-      {
-        id: '103',
-        title: 'Apartamento com vista para o Pão de Açúcar',
-        location: 'Urca, Rio de Janeiro',
-        price: 'R$ 780.000',
-        priceUSD: 'US$ 156,000',
-        imageUrl: '/images/cities/ipatinga.png',
-        type: 'apartamento',
-        beds: 2,
-        baths: 2,
-        area: '85m²',
-        compatibilityScore: 78,
-        isFavorite: false,
-        reasonsForMatch: ['Localização próxima à sua', 'Valor dentro da sua faixa de preço'],
-      },
-      {
-        id: '104',
-        title: 'Casa em condomínio fechado',
-        location: 'Recreio dos Bandeirantes, Rio de Janeiro',
-        price: 'R$ 850.000',
-        priceUSD: 'US$ 170,000',
-        imageUrl: '/images/cities/manhuacu.png',
-        type: 'casa',
-        beds: 3,
-        baths: 2,
-        area: '150m²',
-        compatibilityScore: 72,
-        isFavorite: false,
-        reasonsForMatch: ['Proprietário interessado na sua região', 'Aceita permuta por apartamento em Botafogo'],
-      },
-    ];
+  // Carregar sugestões de imóveis quando o usuário selecionar um imóvel
+  useEffect(() => {
+    const loadSuggestions = async () => {
+      if (!selectedUserProperty) {
+        console.log('Nenhum imóvel selecionado, não carregando sugestões');
+        setIsLoadingProperties(false);
+        return;
+      }
+      
+      if (!user?.id) {
+        console.log('Usuário não logado, não carregando sugestões');
+        setIsLoadingProperties(false);
+        return;
+      }
+      
+      console.log('Carregando sugestões para o imóvel:', selectedUserProperty);
+      setIsLoadingProperties(true);
+      
+      try {
+        // Buscar sugestões da API
+        const { data, error } = await imoveisService.buscarSugestoesPermuta(selectedUserProperty);
+        
+        if (error) {
+          console.error('Erro ao buscar sugestões:', error);
+          throw error;
+        }
+        
+        console.log('Sugestões carregadas:', data?.length || 0, 'sugestões encontradas');
+        
+        if (data && data.length > 0) {
+          // Carregar favoritos do usuário (se houver)
+          let favoritos: string[] = [];
+          try {
+            const { data: favData } = await favoritosService.listarFavoritos(user.id);
+            favoritos = favData?.map((fav: any) => fav.id) || [];
+            console.log('Favoritos carregados:', favoritos.length);
+          } catch (favError) {
+            console.error('Erro ao carregar favoritos:', favError);
+          }
+          
+          // Transformar dados da API para o formato da view
+          const suggestions: SuggestedProperty[] = data.map(imovel => {
+            // Calcular pontuação de compatibilidade (simulação)
+            const compatibilityScore = Math.floor(Math.random() * 30) + 70; // Entre 70 e 99
+            
+            // Gerar razões para a compatibilidade (simulação)
+            const reasons = [];
+            if (compatibilityScore > 90) reasons.push('Localização compatível');
+            if (compatibilityScore > 80) reasons.push('Valor próximo ao do seu imóvel');
+            if (compatibilityScore > 75) reasons.push('Proprietário interessado em sua região');
+            
+            return {
+              id: imovel.id,
+              title: imovel.titulo,
+              location: `${imovel.endereco?.bairro || ''}, ${imovel.endereco?.cidade || ''}`,
+              price: formatarPreco(imovel.preco),
+              priceUSD: formatarPrecoUSD(imovel.preco),
+              imageUrl: imovel.fotos && imovel.fotos.length > 0 
+                ? imovel.fotos[0] 
+                : '/placeholder-image.jpg',
+              type: imovel.tipo as any,
+              beds: imovel.quartos || 0,
+              baths: imovel.banheiros || 0,
+              area: `${imovel.area}m²`,
+              compatibilityScore,
+              isFavorite: favoritos.includes(imovel.id),
+              reasonsForMatch: reasons
+            };
+          });
+          
+          setSuggestedProperties(suggestions);
+        } else {
+          // Sem sugestões, mostrar lista vazia
+          console.log('Nenhuma sugestão encontrada para o imóvel');
+          setSuggestedProperties([]);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar sugestões:', error);
+        toast.error('Não foi possível carregar as sugestões.');
+        setSuggestedProperties([]);
+      } finally {
+        console.log('Finalizando carregamento de sugestões');
+        setIsLoadingProperties(false);
+      }
+    };
+    
+    if (selectedUserProperty) {
+      console.log('Iniciando carregamento de sugestões');
+      loadSuggestions();
+    } else {
+      console.log('Nenhum imóvel selecionado, definindo loading como false');
+      setIsLoadingProperties(false);
+    }
+  }, [selectedUserProperty, user]);
 
-    setSuggestedProperties(mockSuggestions);
-  }, [selectedUserProperty]);
+  // Formatar preço em reais
+  const formatarPreco = (valor: number): string => {
+    return valor.toLocaleString('pt-BR', { 
+      style: 'currency', 
+      currency: 'BRL',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    });
+  };
+  
+  // Formatar preço em dólares
+  const formatarPrecoUSD = (valorBRL: number): string => {
+    // Taxa de câmbio fixa para exemplo (na prática usaria uma API)
+    const cambio = 5;
+    const valorUSD = valorBRL / cambio;
+    
+    return valorUSD.toLocaleString('en-US', { 
+      style: 'currency', 
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    });
+  };
 
-  const toggleFavorite = (id: string) => {
+  const toggleFavorite = async (id: string) => {
+    if (!user?.id) {
+      toast.error('Você precisa estar logado para salvar favoritos');
+      return;
+    }
+    
+    // Verificar se já é favorito
+    const isFavorito = suggestedProperties.find(p => p.id === id)?.isFavorite;
+    
+    try {
+      if (isFavorito) {
+        // Remover dos favoritos
+        const { success, error } = await favoritosService.removerFavorito(user.id, id);
+        if (error) throw error;
+        
+        if (success) {
+          toast.success('Imóvel removido dos favoritos!');
+        }
+      } else {
+        // Adicionar aos favoritos
+        const { success, error } = await favoritosService.adicionarFavorito(user.id, id);
+        if (error) throw error;
+        
+        if (success) {
+          toast.success('Imóvel salvo nos favoritos!');
+        }
+      }
+      
+      // Atualizar estado local
+      setSuggestedProperties(prevProperties => 
+        prevProperties.map(property => 
+          property.id === id 
+            ? { ...property, isFavorite: !property.isFavorite } 
+            : property
+        )
+      );
+    } catch (error) {
+      console.error('Erro ao atualizar favorito:', error);
+      
+      // Mesmo com erro, atualizar o estado local para melhor UX
     setSuggestedProperties(prevProperties => 
       prevProperties.map(property => 
         property.id === id 
@@ -142,6 +310,7 @@ export default function SugestoesPage() {
           : property
       )
     );
+    }
   };
 
   const shareProperty = (id: string, title: string) => {
@@ -159,12 +328,12 @@ export default function SugestoesPage() {
   };
 
   // Renderizar um loading state enquanto verifica autenticação
-  if (isLoading) {
+  if (loading || verificandoPlano) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#4CAF50] mx-auto mb-4"></div>
-          <p className="text-gray-600">Carregando...</p>
+          <p className="text-gray-600">Verificando autenticação...</p>
         </div>
       </div>
     );
@@ -184,7 +353,28 @@ export default function SugestoesPage() {
 
       {/* Conteúdo principal */}
       <main className="flex-1 container mx-auto max-w-6xl px-4 py-6 mt-4 mb-8">
-        {userProperties.length === 0 ? (
+        {!planoAtivo ? (
+          <div className="text-center py-12 bg-white rounded-lg shadow-sm border border-gray-200">
+            <FaExclamationTriangle className="mx-auto text-yellow-500 w-16 h-16 mb-4" />
+            <h2 className="text-xl font-semibold text-gray-700 mb-2">Plano Inativo</h2>
+            <p className="text-gray-600 mb-6 max-w-lg mx-auto">
+              Você não possui um plano ativo. Para acessar as sugestões de imóveis para permuta, é necessário assinar um plano.
+            </p>
+            <Link 
+              href="/dashboard/escolher-plano" 
+              className="bg-[#4CAF50] hover:bg-[#43a047] text-white px-6 py-2 rounded-md text-sm"
+            >
+              Ver planos disponíveis
+            </Link>
+          </div>
+        ) : isLoadingProperties ? (
+          <div className="min-h-screen flex items-center justify-center bg-white">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#4CAF50] mx-auto mb-4"></div>
+              <p className="text-gray-600">Carregando...</p>
+            </div>
+          </div>
+        ) : userProperties.length === 0 ? (
           <div className="text-center py-12">
             <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
               <FaHome className="text-gray-400 w-8 h-8" />
@@ -320,12 +510,12 @@ export default function SugestoesPage() {
                           {property.priceUSD && <p className="text-gray-500 text-sm">{property.priceUSD}</p>}
                         </div>
                         
-                        <Link 
-                          href={`/propostas/criar?propertyId=${property.id}&myPropertyId=${selectedUserProperty}`}
-                          className="block w-full bg-[#4CAF50] hover:bg-[#43a047] text-white text-center py-2 rounded transition-colors mt-2"
+                        <BotaoPlanoAtivo 
+                          onClick={() => router.push(`/propostas/criar?propertyId=${property.id}&myPropertyId=${selectedUserProperty}`)}
+                          className="bg-[#4CAF50] hover:bg-[#43a047] text-white text-center px-4 py-2 rounded transition-colors"
                         >
                           Propor Permuta
-                        </Link>
+                        </BotaoPlanoAtivo>
                       </div>
                     </div>
                   ))}
@@ -395,12 +585,12 @@ export default function SugestoesPage() {
                             </div>
                           </div>
                           
-                          <Link 
-                            href={`/propostas/criar?propertyId=${property.id}&myPropertyId=${selectedUserProperty}`}
+                          <BotaoPlanoAtivo 
+                            onClick={() => router.push(`/propostas/criar?propertyId=${property.id}&myPropertyId=${selectedUserProperty}`)}
                             className="bg-[#4CAF50] hover:bg-[#43a047] text-white text-center px-4 py-2 rounded transition-colors"
                           >
                             Propor Permuta
-                          </Link>
+                          </BotaoPlanoAtivo>
                         </div>
                       </div>
                     </div>

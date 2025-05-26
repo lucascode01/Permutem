@@ -12,21 +12,25 @@ import { createCheckoutSession } from '../lib/checkout';
 
 export default function SelecionarPlanoPage() {
   const router = useRouter();
-  const { user, isLoading } = useAuth();
+  const { user, loading } = useAuth();
   const { planos } = useSupabase();
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [tipoUsuario, setTipoUsuario] = useState<'proprietario' | 'corretor'>('proprietario');
+  const [periodoPlano, setPeriodoPlano] = useState<'mensal' | 'anual'>('mensal');
 
   // Redirecionar se o usuário não estiver logado
   useEffect(() => {
-    if (!isLoading && !user) {
+    if (!loading && !user) {
       router.push('/login');
+    } else if (user && user.user_metadata && user.user_metadata.tipo_usuario) {
+      setTipoUsuario(user.user_metadata.tipo_usuario as 'proprietario' | 'corretor');
     }
-  }, [user, isLoading, router]);
+  }, [user, loading, router]);
 
-  // Filtrar planos com base no tipo de usuário
+  // Filtrar planos com base no tipo de usuário e período
   const planosDoUsuario = planos.filter(
-    plano => plano.tipo_usuario === user?.userType && plano.periodo === 'mensal'
+    plano => plano.tipo_usuario === tipoUsuario
   );
 
   // Ordenar planos por ordem
@@ -38,7 +42,7 @@ export default function SelecionarPlanoPage() {
     
     // Não permitir selecionar o plano Torre Alta
     if (plano && (plano.nome === 'Plano Torre Alta' || 
-        (plano.preco_personalizado && plano.limite_imoveis === 999999))) {
+        (plano.preco_personalizado && plano.limite_imoveis === null))) {
       return; // Não faz nada, pois este plano não é selecionável
     }
     
@@ -69,7 +73,7 @@ export default function SelecionarPlanoPage() {
       }
       
       // Redirecionar para a página de checkout com o ID do plano
-      router.push(`/checkout?plano_id=${selectedPlanId}`);
+      router.push(`/checkout?plano_id=${selectedPlanId}&periodo=${periodoPlano}`);
       
     } catch (error) {
       console.error('Erro ao processar checkout:', error);
@@ -78,8 +82,14 @@ export default function SelecionarPlanoPage() {
     }
   };
 
+  // Calcular preço com desconto para plano anual
+  const calcularPrecoAnual = (precoMensal: number) => {
+    // Aplicar desconto de 16% em planos anuais
+    return precoMensal * 12 * 0.84;
+  };
+
   // Renderizar um loading state enquanto verifica autenticação
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
@@ -124,10 +134,60 @@ export default function SelecionarPlanoPage() {
           </h1>
           
           <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
-            {user?.userType === 'proprietario' 
-              ? 'Escolha o plano ideal para anunciar seus imóveis e encontrar as melhores oportunidades de permuta.'
-              : 'Escolha o plano ideal para sua imobiliária e comece a anunciar seus imóveis para permuta.'}
+            Selecione o plano que melhor se adapta às suas necessidades
           </p>
+
+          {/* Seleção de tipo de usuário */}
+          <div className="flex justify-center mb-8">
+            <div className="bg-white rounded-full shadow-sm p-1 inline-flex">
+              <button
+                onClick={() => setTipoUsuario('proprietario')}
+                className={`py-2 px-4 rounded-full text-sm font-medium transition-colors ${
+                  tipoUsuario === 'proprietario' 
+                    ? 'bg-[#0071ce] text-white' 
+                    : 'bg-white text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                Proprietário
+              </button>
+              <button
+                onClick={() => setTipoUsuario('corretor')}
+                className={`py-2 px-4 rounded-full text-sm font-medium transition-colors ${
+                  tipoUsuario === 'corretor' 
+                    ? 'bg-[#0071ce] text-white' 
+                    : 'bg-white text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                Corretor
+              </button>
+            </div>
+          </div>
+
+          {/* Toggle Mensal/Anual */}
+          <div className="flex justify-center mb-8">
+            <div className="bg-gray-100 rounded-full p-1 inline-flex">
+              <button
+                onClick={() => setPeriodoPlano('mensal')}
+                className={`py-2 px-4 rounded-full text-sm font-medium transition-colors ${
+                  periodoPlano === 'mensal' 
+                    ? 'bg-white shadow-sm text-gray-800' 
+                    : 'text-gray-600'
+                }`}
+              >
+                Mensal
+              </button>
+              <button
+                onClick={() => setPeriodoPlano('anual')}
+                className={`py-2 px-4 rounded-full text-sm font-medium transition-colors ${
+                  periodoPlano === 'anual' 
+                    ? 'bg-white shadow-sm text-gray-800' 
+                    : 'text-gray-600'
+                }`}
+              >
+                Anual <span className="text-green-500 text-xs ml-1">Economize 16%</span>
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Cards de planos */}
@@ -138,6 +198,8 @@ export default function SelecionarPlanoPage() {
               plano={plano}
               isSelected={selectedPlanId === plano.id}
               onSelect={() => handlePlanSelect(plano.id)}
+              periodoPlano={periodoPlano}
+              calcularPrecoAnual={calcularPrecoAnual}
             />
           ))}
         </div>
@@ -168,7 +230,7 @@ export default function SelecionarPlanoPage() {
         
         <div className="mt-6 text-center text-gray-600 text-sm">
           <p>Você pode cancelar sua assinatura a qualquer momento.</p>
-          <p className="mt-1">Todas as transações são processadas com segurança pela Stripe.</p>
+          <p className="mt-1">Todas as transações são processadas com segurança.</p>
         </div>
       </div>
     </div>
@@ -206,7 +268,9 @@ interface PlanCardProps {
     id: string;
     nome: string;
     descricao: string;
-    preco: number;
+    preco?: number;
+    valor_mensal: number; 
+    valor_anual: number;
     recursos: string[];
     destaque: boolean;
     preco_personalizado?: boolean;
@@ -214,9 +278,11 @@ interface PlanCardProps {
   };
   isSelected: boolean;
   onSelect: () => void;
+  periodoPlano: 'mensal' | 'anual';
+  calcularPrecoAnual: (precoMensal: number) => number;
 }
 
-function PlanCard({ plano, isSelected, onSelect }: PlanCardProps) {
+function PlanCard({ plano, isSelected, onSelect, periodoPlano, calcularPrecoAnual }: PlanCardProps) {
   // Função para abrir o WhatsApp para contato
   const abrirWhatsApp = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevenir que o clique afete o card inteiro
@@ -224,28 +290,33 @@ function PlanCard({ plano, isSelected, onSelect }: PlanCardProps) {
   };
 
   // Verificar se é o plano Torre Alta (plano com imóveis indefinidos ou preço personalizado)
-  const isTorreAlta = plano.nome === 'Plano Torre Alta' || (plano.preco_personalizado && plano.limite_imoveis === 999999);
+  const isTorreAlta = plano.nome === 'Plano Torre Alta' || plano.preco_personalizado;
+
+  // Determinar o preço a ser exibido com base no período selecionado
+  const precoExibido = periodoPlano === 'mensal' 
+    ? (plano.preco || plano.valor_mensal) 
+    : (plano.valor_anual || calcularPrecoAnual(plano.preco || plano.valor_mensal));
 
   return (
     <div 
       className={`
-        relative bg-white rounded-xl overflow-hidden transition-all border-2
+        relative bg-white rounded-xl overflow-hidden transition-all border 
         ${isSelected && !isTorreAlta
           ? 'border-[#0071ce] shadow-lg transform scale-[1.02]' 
           : 'border-gray-200 shadow-sm hover:shadow-md'
         }
-        ${plano.destaque ? 'ring-2 ring-[#0071ce] ring-opacity-50' : ''}
+        ${plano.destaque ? 'ring-1 ring-[#0071ce]' : ''}
       `}
       onClick={isTorreAlta ? undefined : onSelect}
     >
       {plano.destaque && (
-        <div className="absolute top-0 right-0 bg-[#0071ce] text-white px-4 py-1 text-sm font-medium">
-          Mais Popular
+        <div className="w-full bg-[#0071ce] text-white px-4 py-2 text-center font-medium">
+          MAIS POPULAR
         </div>
       )}
       
       {plano.preco_personalizado && (
-        <div className="absolute top-0 right-0 bg-purple-600 text-white px-4 py-1 text-sm font-medium">
+        <div className="w-full bg-purple-600 text-white px-4 py-2 text-center font-medium">
           Personalizado
         </div>
       )}
@@ -256,31 +327,25 @@ function PlanCard({ plano, isSelected, onSelect }: PlanCardProps) {
         
         <div className="mb-6">
           {plano.preco_personalizado ? (
-            <div className="flex items-center">
-              <span className="text-3xl font-bold text-gray-800">Consulte</span>
-              <button className="ml-2 text-gray-500 hover:text-[#0071ce]">
-                <FaQuestionCircle />
-              </button>
+            <div>
+              <p className="text-2xl font-bold text-gray-800">Preço personalizado</p>
+              <p className="text-sm text-gray-500">Entre em contato para um orçamento</p>
             </div>
           ) : (
             <div className="flex items-baseline">
               <span className="text-3xl font-bold text-gray-800">
-                R$ {plano.preco.toFixed(2)}
+                R$ {periodoPlano === 'mensal' 
+                  ? Number(plano.preco || plano.valor_mensal).toFixed(2).replace('.', ',')
+                  : Number(plano.valor_anual || calcularPrecoAnual(plano.preco || plano.valor_mensal)).toFixed(2).replace('.', ',')}
               </span>
-              <span className="text-gray-600 ml-1">/mês</span>
+              <span className="text-gray-600 ml-1">/{periodoPlano === 'mensal' ? 'mês' : 'ano'}</span>
             </div>
           )}
         </div>
         
         {plano.limite_imoveis && plano.limite_imoveis < 999999 && (
           <div className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-medium inline-block mb-4">
-            Até {plano.limite_imoveis} imóveis
-          </div>
-        )}
-        
-        {plano.limite_imoveis && plano.limite_imoveis === 999999 && (
-          <div className="bg-purple-50 text-purple-700 px-3 py-1 rounded-full text-sm font-medium inline-block mb-4">
-            Imóveis ilimitados
+            {plano.limite_imoveis} {plano.limite_imoveis === 1 ? 'imóvel' : 'imóveis'}
           </div>
         )}
         
@@ -298,7 +363,7 @@ function PlanCard({ plano, isSelected, onSelect }: PlanCardProps) {
             onClick={abrirWhatsApp}
             className="w-full py-2 rounded font-medium bg-purple-600 text-white hover:bg-purple-700 transition-colors"
           >
-            Fazer Orçamento
+            Solicitar orçamento
           </button>
         ) : (
           <button
@@ -311,7 +376,7 @@ function PlanCard({ plano, isSelected, onSelect }: PlanCardProps) {
               }
             `}
           >
-            {isSelected ? 'Selecionado' : 'Selecionar Plano'}
+            {isSelected ? 'Selecionado' : 'Assinar plano'}
           </button>
         )}
       </div>

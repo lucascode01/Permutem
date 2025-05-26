@@ -7,15 +7,17 @@ import { usePathname } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
 import { FaUser, FaListAlt, FaHeart, FaBell, FaComments, FaSignOutAlt } from 'react-icons/fa';
 import { IoMdSwap } from 'react-icons/io';
+import { notificacoesService } from '../lib/services/notificacoes-service';
 
 export const Navbar = () => {
-  const { user, logout } = useAuth();
+  const { user, userProfile, signOut } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const pathname = usePathname();
 
   // Verificar se estamos em uma página pública (home, como-funciona, ajuda)
-  const isPublicPage = ['/', '/como-funciona', '/ajuda'].includes(pathname);
+  const isPublicPage = ['/', '/como-funciona', '/ajuda'].includes(pathname || '');
 
   // Monitorar o scroll da página para mudar o estilo do cabeçalho
   useEffect(() => {
@@ -37,6 +39,28 @@ export const Navbar = () => {
   useEffect(() => {
     setMenuOpen(false);
   }, [pathname]);
+  
+  // Buscar notificações não lidas
+  useEffect(() => {
+    const fetchUnreadNotifications = async () => {
+      if (user?.id) {
+        try {
+          const { count, error } = await notificacoesService.contarNaoLidas(user.id);
+          if (!error) {
+            setUnreadNotifications(count);
+          }
+        } catch (error) {
+          console.error('Erro ao buscar notificações:', error);
+        }
+      }
+    };
+
+    fetchUnreadNotifications();
+
+    // Configurar polling para atualizar a cada 60 segundos
+    const interval = setInterval(fetchUnreadNotifications, 60000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
@@ -44,7 +68,7 @@ export const Navbar = () => {
 
   const handleLogout = () => {
     setMenuOpen(false);
-    logout();
+    signOut();
   };
 
   // Cabeçalho para usuário não autenticado ou páginas públicas
@@ -96,7 +120,7 @@ export const Navbar = () => {
                     <FaUser className="text-gray-700" />
                   </div>
                   <span className={`text-sm font-medium ${isScrolled ? 'text-gray-800' : 'text-white'}`}>
-                    {user.firstName}
+                    {userProfile?.primeiro_nome}
                   </span>
                 </button>
                 
@@ -108,8 +132,8 @@ export const Navbar = () => {
                           <FaUser className="text-gray-700" />
                         </div>
                         <div>
-                          <p className="font-medium text-gray-800">{user.firstName} {user.lastName}</p>
-                          <p className="text-sm text-gray-500">{user.email}</p>
+                          <p className="font-medium text-gray-800">{userProfile?.primeiro_nome} {userProfile?.ultimo_nome}</p>
+                          <p className="text-sm text-gray-500">{userProfile?.email}</p>
                         </div>
                       </div>
                     </div>
@@ -131,8 +155,20 @@ export const Navbar = () => {
                         <span className="text-gray-800">Imóveis Favoritos</span>
                       </Link>
                       <Link href="/notificacoes" className="flex items-center px-4 py-2 hover:bg-gray-100">
-                        <FaBell className="text-gray-600 mr-3" />
+                        <div className="relative">
+                          <FaBell className="text-gray-600 mr-3" />
+                          {unreadNotifications > 0 && (
+                            <span className="absolute -top-2 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                              {unreadNotifications > 9 ? '9+' : unreadNotifications}
+                            </span>
+                          )}
+                        </div>
                         <span className="text-gray-800">Notificações</span>
+                        {unreadNotifications > 0 && (
+                          <span className="ml-auto bg-red-500 text-white text-xs rounded-full px-2 py-1">
+                            {unreadNotifications}
+                          </span>
+                        )}
                       </Link>
                       <Link href="/propostas" className="flex items-center px-4 py-2 hover:bg-gray-100">
                         <FaComments className="text-gray-600 mr-3" />
@@ -187,8 +223,13 @@ export const Navbar = () => {
                 <FaUser className="text-gray-700" />
               </div>
               <span className="text-sm font-medium text-gray-800">
-                {user.firstName}
+                {userProfile?.primeiro_nome}
               </span>
+              {unreadNotifications > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {unreadNotifications > 9 ? '9+' : unreadNotifications}
+                </span>
+              )}
             </button>
             
             {menuOpen && (
@@ -199,8 +240,8 @@ export const Navbar = () => {
                       <FaUser className="text-gray-700" />
                     </div>
                     <div>
-                      <p className="font-medium text-gray-800">{user.firstName} {user.lastName}</p>
-                      <p className="text-sm text-gray-500">{user.email}</p>
+                      <p className="font-medium text-gray-800">{userProfile?.primeiro_nome} {userProfile?.ultimo_nome}</p>
+                      <p className="text-sm text-gray-500">{userProfile?.email}</p>
                     </div>
                   </div>
                 </div>
@@ -222,8 +263,20 @@ export const Navbar = () => {
                     <span className="text-gray-800">Imóveis Favoritos</span>
                   </Link>
                   <Link href="/notificacoes" className="flex items-center px-4 py-2 hover:bg-gray-100">
-                    <FaBell className="text-gray-600 mr-3" />
+                    <div className="relative">
+                      <FaBell className="text-gray-600 mr-3" />
+                      {unreadNotifications > 0 && (
+                        <span className="absolute -top-2 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                          {unreadNotifications > 9 ? '9+' : unreadNotifications}
+                        </span>
+                      )}
+                    </div>
                     <span className="text-gray-800">Notificações</span>
+                    {unreadNotifications > 0 && (
+                      <span className="ml-auto bg-red-500 text-white text-xs rounded-full px-2 py-1">
+                        {unreadNotifications}
+                      </span>
+                    )}
                   </Link>
                   <Link href="/propostas" className="flex items-center px-4 py-2 hover:bg-gray-100">
                     <FaComments className="text-gray-600 mr-3" />
