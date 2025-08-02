@@ -201,7 +201,7 @@ const ExchangeProperty = () => {
 export default function PropertyPage() {
   const params = useParams();
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { user } = useAuth();
   const [property, setProperty] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [favorited, setFavorited] = useState(false);
@@ -215,7 +215,7 @@ export default function PropertyPage() {
   }, [params.id]);
 
   const handleFavorite = () => {
-    if (!isAuthenticated) {
+    if (!user) {
       router.push('/login?redirect=/imoveis/' + params.id);
       return;
     }

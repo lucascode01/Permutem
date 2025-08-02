@@ -21,13 +21,13 @@ interface UIPayment {
 
 export default function HistoricoPagamentosPage() {
   const router = useRouter();
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
   const [loading, setLoading] = useState(true);
   const [payments, setPayments] = useState<UIPayment[]>([]);
   
   useEffect(() => {
     // Redirecionar para login se não estiver autenticado
-    if (!isLoading && !isAuthenticated) {
+    if (!isLoading && !user) {
       router.push('/login');
       return;
     }
@@ -61,7 +61,7 @@ export default function HistoricoPagamentosPage() {
     };
     
     fetchPaymentHistory();
-  }, [isAuthenticated, isLoading, user, router]);
+  }, [isLoading, user, router]);
   
   // Função auxiliar para mapear status do pagamento do sistema para a UI
   const mapPaymentStatus = (status: string): 'aprovado' | 'recusado' | 'pendente' => {

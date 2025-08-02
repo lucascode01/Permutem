@@ -210,7 +210,7 @@ const DynamicHeader = () => {
               <div className="h-9 w-9 bg-gray-300 rounded-full flex items-center justify-center mr-1">
                 <FaUser className="text-gray-700" />
               </div>
-              <span className="hidden md:inline">{user.firstName}</span>
+              <span className="hidden md:inline">{user.user_metadata?.primeiro_nome || 'Usuário'}</span>
             </button>
             
             {/* Menu de usuário suspenso */}
@@ -222,7 +222,7 @@ const DynamicHeader = () => {
                       <FaUser className="text-gray-700" />
                     </div>
                     <div>
-                      <p className="font-medium text-gray-800">{user.firstName} {user.lastName}</p>
+                      <p className="font-medium text-gray-800">{user.user_metadata?.primeiro_nome || 'Usuário'} {user.user_metadata?.ultimo_nome || ''}</p>
                       <p className="text-sm text-gray-500">{user.email}</p>
                     </div>
                   </div>

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function SubscriptionGuard({ children }: { children: React.ReactNode }) {
-  const { user, isLoading, hasActiveSubscription } = useAuth();
+  const { user, isLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -19,10 +19,10 @@ export default function SubscriptionGuard({ children }: { children: React.ReactN
     }
 
     // Se não tiver assinatura ativa, redirecione para a seleção de planos
-    if (!hasActiveSubscription) {
+    if (false) {
       router.push('/selecionar-plano');
     }
-  }, [user, isLoading, hasActiveSubscription, router]);
+  }, [user, isLoading, router]);
 
   // Mostrar um estado de carregamento enquanto verifica
   if (isLoading) {
@@ -37,7 +37,7 @@ export default function SubscriptionGuard({ children }: { children: React.ReactN
   }
 
   // Se não estiver autenticado ou não tiver assinatura, não renderize nada
-  if (!user || !hasActiveSubscription) {
+  if (!user) {
     return null;
   }
 

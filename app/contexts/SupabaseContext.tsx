@@ -928,9 +928,9 @@ export const SupabaseProvider = ({ children }: { children: React.ReactNode }) =>
       if (error) throw error;
       
       // Atualizar a lista de usuários localmente
-      setImoveis(prevImoveis => 
-        prevImoveis.map(imovel => 
-          imovel.id === id ? { ...imovel, status } : imovel
+      setUsuarios(prevUsuarios => 
+        prevUsuarios.map(usuario => 
+          usuario.id === id ? { ...usuario, status } : usuario
         )
       );
       

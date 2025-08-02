@@ -9,7 +9,7 @@ import { IoMdSwap } from 'react-icons/io';
 import { useAuth } from '../contexts/AuthContext';
 
 const PageHeader = () => {
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
@@ -25,7 +25,7 @@ const PageHeader = () => {
 
   const handleLogout = () => {
     setMenuOpen(false);
-    logout();
+    signOut();
   };
 
   return (
@@ -64,7 +64,7 @@ const PageHeader = () => {
                   <FaUser className="text-gray-700" />
                 </div>
                 <span className="text-sm font-medium text-gray-800">
-                  {user.firstName}
+                  {user.user_metadata?.primeiro_nome || 'Usuário'}
                 </span>
               </button>
               
@@ -77,7 +77,7 @@ const PageHeader = () => {
                         <FaUser className="text-gray-700" />
                       </div>
                       <div>
-                        <p className="font-medium text-gray-800">{user.firstName} {user.lastName}</p>
+                        <p className="font-medium text-gray-800">{user.user_metadata?.primeiro_nome || 'Usuário'} {user.user_metadata?.ultimo_nome || ''}</p>
                         <p className="text-sm text-gray-500">{user.email}</p>
                       </div>
                     </div>

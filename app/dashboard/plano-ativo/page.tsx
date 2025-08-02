@@ -12,7 +12,7 @@ import { toast } from 'react-hot-toast';
 
 export default function PlanoAtivoPage() {
   const router = useRouter();
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
   const [subscription, setSubscription] = useState<{
     status: string;
     plan_id: string;
@@ -23,13 +23,13 @@ export default function PlanoAtivoPage() {
 
   useEffect(() => {
     // Redirecionar para login se não estiver autenticado
-    if (!isLoading && !isAuthenticated) {
+    if (!isLoading && !user) {
       router.push('/login');
       return;
     }
 
     // Verificar status da assinatura
-    if (isAuthenticated && user) {
+    if (user) {
       const fetchSubscriptionStatus = async () => {
         try {
           const status = await checkSubscriptionStatus(user.id);
@@ -47,7 +47,7 @@ export default function PlanoAtivoPage() {
 
       fetchSubscriptionStatus();
     }
-  }, [isAuthenticated, isLoading, user, router]);
+  }, [isLoading, user, router]);
 
   const handleCancelSubscription = async () => {
     if (!user) return;

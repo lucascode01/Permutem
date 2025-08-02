@@ -36,7 +36,7 @@ export default function UnifiedHeader({
   variant = 'default',
   hideActions = false
 }: UnifiedHeaderProps) {
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const router = useRouter();
@@ -103,7 +103,7 @@ export default function UnifiedHeader({
 
   const handleLogout = () => {
     setMenuOpen(false);
-    logout();
+    signOut();
   };
   
   // Logo branco ou colorido dependendo do fundo
@@ -185,10 +185,10 @@ export default function UnifiedHeader({
                   aria-label="Menu do usuário"
                 >
                   <div className="h-8 w-8 bg-gray-100 text-blue-800 rounded-full flex items-center justify-center mr-1 font-medium text-md">
-                    {user.firstName?.charAt(0).toUpperCase() || 'U'}
+                    {user.user_metadata?.primeiro_nome?.charAt(0).toUpperCase() || 'U'}
                   </div>
                   <span className="text-sm hidden md:inline font-medium mr-1">
-                    {user.firstName}
+                    {user.user_metadata?.primeiro_nome || 'Usuário'}
                   </span>
                   <ChevronDownIcon className="h-4 w-4" />
                 </button>
@@ -199,10 +199,10 @@ export default function UnifiedHeader({
                     <div className="p-4 border-b border-gray-100">
                       <div className="flex items-center">
                         <div className="h-10 w-10 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center mr-3 font-medium">
-                          {user.firstName?.charAt(0).toUpperCase() || 'U'}
+                          {user.user_metadata?.primeiro_nome?.charAt(0).toUpperCase() || 'U'}
                         </div>
                         <div>
-                          <p className="font-medium text-gray-800">{user.firstName} {user.lastName}</p>
+                          <p className="font-medium text-gray-800">{user.user_metadata?.primeiro_nome || 'Usuário'} {user.user_metadata?.ultimo_nome || ''}</p>
                           <p className="text-sm text-gray-500">{user.email}</p>
                         </div>
                       </div>

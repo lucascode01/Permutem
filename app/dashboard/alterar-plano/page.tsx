@@ -57,14 +57,14 @@ const plans = [
 
 export default function AlterarPlanoPage() {
   const router = useRouter();
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
   const [currentPlan, setCurrentPlan] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [changingPlan, setChangingPlan] = useState(false);
 
   useEffect(() => {
     // Redirecionar para login se não estiver autenticado
-    if (!isLoading && !isAuthenticated) {
+    if (!isLoading && !user) {
       router.push('/login');
       return;
     }
@@ -85,7 +85,7 @@ export default function AlterarPlanoPage() {
     };
 
     fetchSubscriptionStatus();
-  }, [isAuthenticated, isLoading, user, router]);
+  }, [isLoading, user, router]);
 
   const handleChangePlan = async (newPlanId: string) => {
     if (!user || !currentPlan) return;

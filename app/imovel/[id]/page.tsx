@@ -38,7 +38,7 @@ type PropertyDetail = {
 export default function PropertyDetailPage() {
   const { id } = useParams();
   const router = useRouter();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
   const [property, setProperty] = useState<PropertyDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState('');
@@ -96,7 +96,7 @@ export default function PropertyDetailPage() {
 
   // Carregar imóveis do usuário para permuta
   useEffect(() => {
-    if (isAuthenticated && showExchangeModal) {
+    if (user && showExchangeModal) {
       // Simulação de chamada à API para buscar imóveis do usuário
       setTimeout(() => {
         const mockUserProperties = [
@@ -106,7 +106,7 @@ export default function PropertyDetailPage() {
         setUserProperties(mockUserProperties);
       }, 500);
     }
-  }, [isAuthenticated, showExchangeModal]);
+  }, [user, showExchangeModal]);
 
   // Formatar preço
   const formatPrice = (price: number) => {
@@ -118,7 +118,7 @@ export default function PropertyDetailPage() {
 
   // Alternar favorito
   const toggleFavorite = () => {
-    if (!isAuthenticated) {
+    if (!user) {
       router.push('/login');
       return;
     }
@@ -410,7 +410,7 @@ export default function PropertyDetailPage() {
                 
                 {property.acceptsExchange && (
                   <button 
-                    onClick={() => isAuthenticated ? setShowExchangeModal(true) : router.push('/login')}
+                    onClick={() => user ? setShowExchangeModal(true) : router.push('/login')}
                     className="w-full bg-primary text-white py-3 rounded-lg font-medium hover:bg-primary-dark transition flex justify-center items-center"
                   >
                     <FaExchangeAlt className="mr-2" />

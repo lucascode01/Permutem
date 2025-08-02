@@ -32,11 +32,7 @@ export async function confirmEmail(email: string): Promise<{ success: boolean; m
     }
     
     // Obter usuário auth
-    const { data: authData, error: authError } = await supabase.auth.admin.listUsers({
-      filters: {
-        email: email
-      }
-    });
+    const { data: authData, error: authError } = await supabase.auth.admin.listUsers();
     
     if (authError || !authData || !authData.users || authData.users.length === 0) {
       return {

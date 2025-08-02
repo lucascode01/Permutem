@@ -1,4 +1,4 @@
-import { Usuario, Imovel, Proposta, Plano } from './supabase';
+import { Usuario, Imovel, Proposta, Plano } from './types';
 import { v4 as uuidv4 } from 'uuid';
 
 // Função para gerar uma data aleatória nos últimos 30 dias
@@ -15,8 +15,8 @@ export const mockDataGenerator = () => {
     {
       id: '1',
       email: 'admin@permutem.com',
-      nome: 'Admin',
-      sobrenome: 'Sistema',
+      primeiro_nome: 'Admin',
+      ultimo_nome: 'Sistema',
       tipo: 'admin',
       telefone: '(11) 99999-9999',
       data_registro: randomDate(60),
