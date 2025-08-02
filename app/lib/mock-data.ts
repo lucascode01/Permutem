@@ -31,10 +31,9 @@ export const mockDataGenerator = () => {
       tipo_usuario: 'proprietario',
       telefone: '(11) 98888-8888',
       data_registro: randomDate(45),
-      ultimo_login: randomDate(3),
       status: 'ativo',
-      verificado: true,
-      plano_id: '2'
+      created_at: randomDate(45),
+      updated_at: randomDate(3)
     },
     {
       id: '3',
@@ -44,10 +43,9 @@ export const mockDataGenerator = () => {
       tipo_usuario: 'corretor',
       telefone: '(21) 97777-7777',
       data_registro: randomDate(30),
-      ultimo_login: randomDate(5),
       status: 'ativo',
-      verificado: true,
-      plano_id: '3'
+      created_at: randomDate(30),
+      updated_at: randomDate(5)
     },
     {
       id: '4',
