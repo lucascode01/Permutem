@@ -20,7 +20,6 @@ export const mockDataGenerator = () => {
       tipo_usuario: 'admin',
       telefone: '(11) 99999-9999',
       data_registro: randomDate(60),
-      ultimo_login: randomDate(1),
       status: 'ativo',
       verificado: true
     },
@@ -40,9 +39,9 @@ export const mockDataGenerator = () => {
     {
       id: '3',
       email: 'maria@exemplo.com',
-      nome: 'Maria',
-      sobrenome: 'Santos',
-      tipo: 'corretor',
+      primeiro_nome: 'Maria',
+      ultimo_nome: 'Santos',
+      tipo_usuario: 'corretor',
       telefone: '(21) 97777-7777',
       data_registro: randomDate(30),
       ultimo_login: randomDate(5),
