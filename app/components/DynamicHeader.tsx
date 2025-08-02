@@ -9,7 +9,7 @@ import { FaUser, FaListAlt, FaHeart, FaBell, FaComments, FaSignOutAlt } from 're
 import { IoMdSwap } from 'react-icons/io';
 
 const DynamicHeader = () => {
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const pathname = usePathname();
@@ -47,7 +47,7 @@ const DynamicHeader = () => {
 
   const handleLogout = () => {
     setMenuOpen(false);
-    logout();
+    signOut();
   };
 
   // Cabeçalho para usuário não autenticado ou páginas públicas
@@ -98,7 +98,7 @@ const DynamicHeader = () => {
                     <FaUser className="text-gray-700" />
                   </div>
                   <span className={`text-sm font-medium ${isScrolled || isPropertyDetailPage ? 'text-gray-800' : 'text-white'}`}>
-                    {user.firstName}
+                    {user.user_metadata?.primeiro_nome || 'Usuário'}
                   </span>
                 </button>
                 
@@ -111,7 +111,7 @@ const DynamicHeader = () => {
                           <FaUser className="text-gray-700" />
                         </div>
                         <div>
-                          <p className="font-medium text-gray-800">{user.firstName} {user.lastName}</p>
+                          <p className="font-medium text-gray-800">{user.user_metadata?.primeiro_nome || 'Usuário'} {user.user_metadata?.ultimo_nome || ''}</p>
                           <p className="text-sm text-gray-500">{user.email}</p>
                         </div>
                       </div>

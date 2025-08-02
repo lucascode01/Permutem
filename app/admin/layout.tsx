@@ -20,7 +20,7 @@ export default function AdminLayout({
   useEffect(() => {
     setIsClient(true);
     
-    if (!isLoading && (!user || user?.userType !== 'admin')) {
+    if (!isLoading && (!user || user?.user_metadata?.tipo_usuario !== 'admin')) {
       router.push('/login');
     }
   }, [user, isLoading, router]);
@@ -33,7 +33,7 @@ export default function AdminLayout({
     );
   }
 
-  if (!user || user.userType !== 'admin') {
+      if (!user || user.user_metadata?.tipo_usuario !== 'admin') {
     return null; // Não renderizar nada enquanto o redirecionamento acontece
   }
 

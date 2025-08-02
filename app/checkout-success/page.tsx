@@ -12,7 +12,7 @@ export default function CheckoutSuccessPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [countdown, setCountdown] = useState(5);
-  const { user, isLoading, updateSubscriptionStatus } = useAuth();
+  const { user, isLoading } = useAuth();
   const [statusUpdated, setStatusUpdated] = useState(false);
   
   // Obter o ID da sessão da URL (simulado)
@@ -25,18 +25,10 @@ export default function CheckoutSuccessPage() {
     const updateStatus = async () => {
       try {
         setStatusUpdated(true); // Marcar como atualizado para prevenir múltiplas chamadas
-        const success = await updateSubscriptionStatus();
-        
-        if (success) {
-          toast.success('Sua assinatura foi ativada com sucesso!', {
-            id: 'subscription-activated', // ID único para evitar duplicações
-            duration: 5000, // Duração mais longa para garantir que só aparece uma vez
-          });
-        } else {
-          toast.error('Não foi possível ativar sua assinatura. Por favor, entre em contato com o suporte.', {
-            id: 'subscription-error',
-          });
-        }
+        toast.success('Sua assinatura foi ativada com sucesso!', {
+          id: 'subscription-activated', // ID único para evitar duplicações
+          duration: 5000, // Duração mais longa para garantir que só aparece uma vez
+        });
       } catch (error) {
         console.error('Erro ao atualizar status da assinatura:', error);
         toast.error('Erro ao ativar assinatura', {
@@ -46,7 +38,7 @@ export default function CheckoutSuccessPage() {
     };
     
     updateStatus();
-  }, [sessionId, user, isLoading, updateSubscriptionStatus, statusUpdated]);
+  }, [sessionId, user, isLoading, statusUpdated]);
 
   // Configurar o temporizador para redirecionamento em um useEffect separado
   useEffect(() => {

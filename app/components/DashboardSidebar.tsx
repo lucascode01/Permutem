@@ -14,7 +14,7 @@ import {
 
 export default function DashboardSidebar() {
   const pathname = usePathname();
-  const { logout } = useAuth();
+  const { signOut } = useAuth();
 
   // Verificar se o link está ativo
   const isActive = (path: string) => {
@@ -104,7 +104,7 @@ export default function DashboardSidebar() {
           
           <li className="mt-6">
             <button
-              onClick={logout}
+                              onClick={signOut}
               className="flex w-full items-center space-x-2 p-2 rounded-md hover:bg-red-700 transition-colors text-white"
             >
               <LogOut className="h-5 w-5" />

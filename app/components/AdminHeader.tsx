@@ -8,7 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { FaSignOutAlt, FaHome, FaUserCog, FaRegBell, FaSearch } from 'react-icons/fa';
 
 const AdminHeader = () => {
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -32,7 +32,7 @@ const AdminHeader = () => {
 
   const handleLogout = () => {
     setMenuOpen(false);
-    logout();
+    signOut();
   };
 
   const handleSearch = (e: React.FormEvent) => {
@@ -41,7 +41,7 @@ const AdminHeader = () => {
     // Implementar lógica de pesquisa aqui
   };
 
-  if (!user || user.userType !== 'admin') {
+  if (!user || user.user_metadata?.tipo_usuario !== 'admin') {
     return null;
   }
 
@@ -138,14 +138,14 @@ const AdminHeader = () => {
                 <FaUserCog />
               </div>
               <span className="ml-2 font-medium text-sm text-gray-700 hidden md:block">
-                {user.firstName}
+                {user.user_metadata?.primeiro_nome || 'Admin'}
               </span>
             </button>
             
             {menuOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 overflow-hidden">
                 <div className="p-3 border-b border-gray-200">
-                  <p className="font-medium text-gray-800">{user.firstName} {user.lastName}</p>
+                  <p className="font-medium text-gray-800">{user.user_metadata?.primeiro_nome || 'Admin'} {user.user_metadata?.ultimo_nome || ''}</p>
                   <p className="text-xs text-gray-500 mt-1">{user.email}</p>
                 </div>
                 <div className="py-1">

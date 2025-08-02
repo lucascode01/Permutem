@@ -447,9 +447,9 @@ export default function ImoveisAdminPage() {
                   <td className="py-3 px-4">{formatarPreco(imovel.preco)}</td>
                   <td className="py-3 px-4">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      imovel.status === 'aprovado' ? 'bg-green-100 text-green-800' : 
-                      imovel.status === 'pendente' ? 'bg-yellow-100 text-yellow-800' : 
-                      imovel.status === 'reprovado' ? 'bg-red-100 text-red-800' : 
+                      imovel.status === 'ativo' ? 'bg-green-100 text-green-800' : 
+                      imovel.status === 'inativo' ? 'bg-yellow-100 text-yellow-800' : 
+                      imovel.status === 'vendido' ? 'bg-red-100 text-red-800' : 
                       'bg-gray-100 text-gray-800'
                     }`}>
                       {imovel.status.charAt(0).toUpperCase() + imovel.status.slice(1)}
@@ -481,32 +481,32 @@ export default function ImoveisAdminPage() {
                       >
                         <FaStar />
                       </button>
-                      {imovel.status !== 'aprovado' && (
+                      {imovel.status !== 'ativo' && (
                         <button
-                          onClick={() => handleAlterarStatus(imovel.id, 'aprovado')}
+                          onClick={() => handleAlterarStatus(imovel.id, 'ativo')}
                           disabled={processandoAcao === `status-${imovel.id}`}
                           className="p-1 text-green-600 hover:text-green-800 transition-colors"
-                          title="Aprovar"
+                          title="Ativar"
                         >
                           <FaCheckCircle />
                         </button>
                       )}
-                      {imovel.status !== 'reprovado' && (
+                      {imovel.status !== 'vendido' && (
                         <button
-                          onClick={() => handleAlterarStatus(imovel.id, 'reprovado')}
+                          onClick={() => handleAlterarStatus(imovel.id, 'vendido')}
                           disabled={processandoAcao === `status-${imovel.id}`}
                           className="p-1 text-red-600 hover:text-red-800 transition-colors"
-                          title="Reprovar"
+                          title="Marcar como Vendido"
                         >
                           <FaTimesCircle />
                         </button>
                       )}
-                      {imovel.status !== 'pausado' && (
+                      {imovel.status !== 'permutado' && (
                         <button
-                          onClick={() => handleAlterarStatus(imovel.id, 'pausado')}
+                          onClick={() => handleAlterarStatus(imovel.id, 'permutado')}
                           disabled={processandoAcao === `status-${imovel.id}`}
                           className="p-1 text-gray-600 hover:text-gray-800 transition-colors"
-                          title="Pausar"
+                          title="Marcar como Permutado"
                         >
                           <FaBan />
                         </button>

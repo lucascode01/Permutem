@@ -10,7 +10,6 @@ import { Proposta } from '../lib/types';
 import { toast } from 'react-hot-toast';
 import { checkSubscriptionStatus } from '../lib/checkout';
 
-
 type ProposalStatus = 'pending' | 'accepted' | 'rejected' | 'cancelled';
 
 type ProposalViewModel = {

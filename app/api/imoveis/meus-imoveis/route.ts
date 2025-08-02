@@ -32,7 +32,7 @@ const getSupabaseClient = () => {
 export async function GET(request: NextRequest) {
   try {
     // Usar try/catch para capturar erros específicos
-    let supabase;
+    let supabase: any;
     try {
       supabase = getSupabaseClient();
     } catch (error: any) {
@@ -92,7 +92,7 @@ export async function GET(request: NextRequest) {
     
     // Obter dados adicionais - número de propostas recebidas para cada imóvel
     const imoveisComDadosAdicionais = await Promise.all(
-      imoveis.map(async (imovel) => {
+      imoveis.map(async (imovel: any) => {
         // Contar propostas recebidas para o imóvel
         const { count: propostasCount, error: propostasError } = await supabase
           .from('propostas')
@@ -107,12 +107,12 @@ export async function GET(request: NextRequest) {
     );
     
     // Calcular estatísticas gerais
-    const imoveisAtivos = imoveis.filter(i => i.status === 'ativo').length;
-    const imoveisInativos = imoveis.filter(i => i.status === 'inativo').length;
-    const imoveisVendidos = imoveis.filter(i => i.status === 'vendido').length;
-    const imoveisPermutados = imoveis.filter(i => i.status === 'permutado').length;
+    const imoveisAtivos = imoveis.filter((i: any) => i.status === 'ativo').length;
+    const imoveisInativos = imoveis.filter((i: any) => i.status === 'inativo').length;
+    const imoveisVendidos = imoveis.filter((i: any) => i.status === 'vendido').length;
+    const imoveisPermutados = imoveis.filter((i: any) => i.status === 'permutado').length;
     
-    const totalVisualizacoes = imoveis.reduce((total, imovel) => total + (imovel.visualizacoes || 0), 0);
+    const totalVisualizacoes = imoveis.reduce((total: any, imovel: any) => total + (imovel.visualizacoes || 0), 0);
     
     // Retornar resultados com metadados
     return NextResponse.json({

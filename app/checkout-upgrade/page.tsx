@@ -11,7 +11,7 @@ import { toast } from 'react-hot-toast';
 export default function CheckoutUpgradePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
   const [loading, setLoading] = useState(true);
   const [processingPayment, setProcessingPayment] = useState(false);
   const [currentPlan, setCurrentPlan] = useState<string | null>(null);
@@ -24,7 +24,7 @@ export default function CheckoutUpgradePage() {
   
   useEffect(() => {
     // Redirecionar para login se não estiver autenticado
-    if (!isLoading && !isAuthenticated) {
+    if (!isLoading && !user) {
       router.push('/login');
       return;
     }
@@ -59,7 +59,7 @@ export default function CheckoutUpgradePage() {
     };
     
     fetchSubscriptionStatus();
-  }, [isAuthenticated, isLoading, user, router, fromPlanId, toPlanId]);
+  }, [isLoading, user, router, fromPlanId, toPlanId]);
   
   // Calcular o preço pro-rata
   const calculateProRatedPrice = () => {
@@ -90,8 +90,8 @@ export default function CheckoutUpgradePage() {
         precoTotal: calculateProRatedPrice(),
         tipoPlano: 'proprietario' as const,
         periodoCobranca: 'mensal' as const,
-        nomeUsuario: `${user.firstName} ${user.lastName}`,
-        emailUsuario: user.email,
+        nomeUsuario: `${user.user_metadata?.primeiro_nome || ''} ${user.user_metadata?.ultimo_nome || ''}`,
+        emailUsuario: user.email || '',
         isUpgrade: true,
         previousPlanId: fromPlanId
       };

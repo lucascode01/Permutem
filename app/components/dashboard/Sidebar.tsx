@@ -19,7 +19,7 @@ import {
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   
   // Menu principal com as mesmas opções que aparecem no dropdown do perfil
   const navigation = [
@@ -44,7 +44,7 @@ export default function Sidebar() {
     return planoId; // Retorna o ID original se não reconhecer o padrão
   };
 
-  const planName = getPlanName(user?.subscription?.planoId);
+  const planName = getPlanName(undefined);
 
   return (
     <div className="h-full w-64 bg-white shadow-md flex flex-col">
@@ -63,10 +63,10 @@ export default function Sidebar() {
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center space-x-3">
           <div className="bg-blue-100 text-blue-800 rounded-full w-10 h-10 flex items-center justify-center font-medium text-lg">
-            {user?.firstName?.charAt(0) || 'U'}
+            {user?.user_metadata?.primeiro_nome?.charAt(0) || 'U'}
           </div>
           <div>
-            <p className="font-medium text-gray-800">{user?.firstName} {user?.lastName}</p>
+            <p className="font-medium text-gray-800">{user?.user_metadata?.primeiro_nome || 'Usuário'} {user?.user_metadata?.ultimo_nome || ''}</p>
             <p className="text-xs text-gray-500">{user?.email}</p>
           </div>
         </div>
@@ -101,13 +101,13 @@ export default function Sidebar() {
         <div className="flex items-center px-4 py-2 text-sm font-medium text-[#0071ce] bg-blue-50 rounded-lg mb-4">
           <span className="mr-2 text-lg">⭐</span>
           <div>
-            <p>Status: {user?.subscription?.active ? 'Ativo' : 'Inativo'}</p>
+            <p>Status: Inativo</p>
             <p className="text-xs text-gray-600">Plano: {planName}</p>
           </div>
         </div>
 
         <button
-          onClick={logout}
+                          onClick={signOut}
           className="flex items-center px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg w-full"
         >
           <ArrowLeftOnRectangleIcon className="w-5 h-5 mr-3 flex-shrink-0" />
