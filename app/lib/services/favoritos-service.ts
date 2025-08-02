@@ -73,9 +73,9 @@ class FavoritosService {
       if (error) throw error;
       
       // Transformar o resultado para extrair os imóveis
-      const imoveis = data?.map(item => item.imoveis) || [];
+      const imoveis = data?.map(item => item.imoveis).filter(Boolean) || [];
       
-      return { data: imoveis, error: null };
+      return { data: imoveis as unknown as Imovel[], error: null };
     } catch (error) {
       console.error('Erro ao listar favoritos:', error);
       return { data: null, error: error as Error };

@@ -254,8 +254,8 @@ export const mockDataGenerator = () => {
       imovel_destino_id: '3',
       mensagem: 'Tenho interesse em permutar meu apartamento em Santos pela sua cobertura em Ipanema. Podemos conversar sobre valores e condições?',
       status: 'pendente',
-      data_criacao: randomDate(4),
-      data_atualizacao: randomDate(4)
+      criado_em: randomDate(4),
+      atualizado_em: randomDate(4)
     },
     {
       id: '2',
@@ -265,19 +265,19 @@ export const mockDataGenerator = () => {
       imovel_destino_id: '2',
       mensagem: 'Gostaria de propor uma permuta do meu terreno em Florianópolis pela sua casa em Campinas. Estou disposto a pagar a diferença.',
       status: 'aceita',
-      data_criacao: randomDate(10),
-      data_atualizacao: randomDate(8)
+      criado_em: randomDate(10),
+      atualizado_em: randomDate(8)
     },
     {
       id: '3',
-      usuario_origem_id: '4',
-      usuario_destino_id: '3',
+      user_origem_id: '4',
+      user_destino_id: '3',
       imovel_origem_id: '5',
       imovel_destino_id: '3',
       mensagem: 'Tenho interesse em permutar minha fazenda pela sua cobertura, o que acha?',
       status: 'recusada',
-      data_criacao: randomDate(15),
-      data_atualizacao: randomDate(13)
+      criado_em: randomDate(15),
+      atualizado_em: randomDate(13)
     }
   ];
 
@@ -296,11 +296,16 @@ export const mockDataGenerator = () => {
         'Suporte por email',
         'Destaque nos resultados de busca'
       ],
+      valor_mensal: 40.00,
+      valor_anual: 400.00,
+      max_anuncios: 5,
       ativo: true,
       destaque: true,
       ordem: 1,
       tipo_usuario: 'proprietario',
-      limite_imoveis: 5
+      limite_imoveis: 5,
+      criado_em: randomDate(60),
+      atualizado_em: randomDate(1)
     },
     
     // Planos para corretores/imobiliárias
@@ -317,11 +322,16 @@ export const mockDataGenerator = () => {
         'Suporte prioritário',
         'Dashboard de estatísticas'
       ],
+      valor_mensal: 180.00,
+      valor_anual: 1800.00,
+      max_anuncios: 30,
       ativo: true,
       destaque: false,
       ordem: 2,
       tipo_usuario: 'corretor',
-      limite_imoveis: 30
+      limite_imoveis: 30,
+      criado_em: randomDate(60),
+      atualizado_em: randomDate(1)
     },
     {
       id: '3',
@@ -337,11 +347,16 @@ export const mockDataGenerator = () => {
         'Suporte prioritário',
         'Dashboard de estatísticas'
       ],
+      valor_mensal: 290.00,
+      valor_anual: 2900.00,
+      max_anuncios: 70,
       ativo: true,
       destaque: true,
       ordem: 3,
       tipo_usuario: 'corretor',
-      limite_imoveis: 70
+      limite_imoveis: 70,
+      criado_em: randomDate(60),
+      atualizado_em: randomDate(1)
     },
     {
       id: '4',
@@ -359,11 +374,16 @@ export const mockDataGenerator = () => {
         'Certificação de anúncios',
         'Relatórios mensais de performance'
       ],
+      valor_mensal: 390.00,
+      valor_anual: 3900.00,
+      max_anuncios: 100,
       ativo: true,
       destaque: false,
       ordem: 4,
       tipo_usuario: 'corretor',
-      limite_imoveis: 100
+      limite_imoveis: 100,
+      criado_em: randomDate(60),
+      atualizado_em: randomDate(1)
     },
     {
       id: '5',
@@ -382,17 +402,22 @@ export const mockDataGenerator = () => {
         'Certificação premium de anúncios',
         'Relatórios personalizados'
       ],
+      valor_mensal: 0,
+      valor_anual: 0,
+      max_anuncios: 999999,
       ativo: true,
       destaque: false,
       ordem: 5,
       tipo_usuario: 'corretor',
       preco_personalizado: true,
-      limite_imoveis: 999999
+      limite_imoveis: 999999,
+      criado_em: randomDate(60),
+      atualizado_em: randomDate(1)
     }
   ];
 
   // Definir imóveis em destaque
-  const imoveisDestaque = imoveis.filter(imovel => imovel.destaque && imovel.status === 'aprovado');
+  const imoveisDestaque = imoveis.filter(imovel => imovel.destaque && imovel.status === 'ativo');
 
   return {
     usuarios,

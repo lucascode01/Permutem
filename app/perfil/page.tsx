@@ -152,7 +152,7 @@ export default function PerfilPage() {
               currentImage={profileImageUrl}
               onImageSelected={handleImageSelected}
             />
-          <h2 className="text-xl font-semibold text-white">{user?.firstName} {user?.lastName}</h2>
+          <h2 className="text-xl font-semibold text-white">{(user as any)?.primeiro_nome || (user as any)?.firstName} {(user as any)?.ultimo_nome || (user as any)?.lastName}</h2>
           <p className="text-white text-opacity-90">{user?.email}</p>
           </div>
 

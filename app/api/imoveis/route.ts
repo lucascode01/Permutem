@@ -3,9 +3,9 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 
 // Configuração do cliente Supabase com a URL e chave corretas
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://pclnvditmctgsktdzlta.supabase.co';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjbG52ZGl0bWN0Z3NrdGR6bHRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2NzQ0MzAsImV4cCI6MjA2MzI1MDQzMH0.ECUVBH5l7EyZTcKkh6iLiip8C-h_G3PIq9eY7teHArk';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || supabaseAnonKey;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 // Função para obter o cliente Supabase
 const getSupabaseClient = () => {

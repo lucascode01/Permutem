@@ -3,17 +3,13 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-// Configuração para desenvolvimento
-const devConfig = {
-  supabaseUrl: 'https://pclnvditmctgsktdzlta.supabase.co',
-  supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjbG52ZGl0bWN0Z3NrdGR6bHRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2NzQ0MzAsImV4cCI6MjA2MzI1MDQzMH0.ECUVBH5l7EyZTcKkh6iLiip8C-h_G3PIq9eY7teHArk'
-};
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://stweeoayxpzuydwimbqa.supabase.co';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN0d2Vlb2F5eHB6dXlkd2ltYnFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQxNjAzODksImV4cCI6MjA2OTczNjM4OX0.oRMoWHprqQwD8njkrnTI2rEgnZ9suizcd88dVxadZWo';
 
-// URL e chave do Supabase
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || devConfig.supabaseUrl;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || devConfig.supabaseKey;
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Supabase URL e/ou Anon Key não definidos!');
+}
 
-// Criar cliente Supabase
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Mock de dados para desenvolvimento

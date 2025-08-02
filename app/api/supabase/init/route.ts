@@ -5,8 +5,8 @@ import { createTableScripts } from '../../../lib/supabase';
 // Esta API é usada apenas para inicializar o banco de dados com as tabelas necessárias
 
 // Inicialização do cliente Supabase com chave de serviço para acesso total
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 export async function POST(req: Request) {
   // Verificar autenticação (em produção, use uma chave secreta)

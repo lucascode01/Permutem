@@ -344,7 +344,7 @@ class ImoveisService {
       if (fetchError) throw fetchError;
       
       // Remover a foto do array
-      const fotosAtualizadas = (imovel.fotos || []).filter(foto => foto !== fotoUrl);
+      const fotosAtualizadas = (imovel.fotos || []).filter((foto: string) => foto !== fotoUrl);
       
       // Atualizar o imóvel com o novo array de fotos
       const { error: updateError } = await supabase

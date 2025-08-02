@@ -112,7 +112,7 @@ class PropostasService {
           user_id: destinatarioId,
           tipo: 'proposta',
           titulo: 'Nova proposta de permuta recebida',
-          conteudo: `${proposta.usuarios.primeiro_nome} ${proposta.usuarios.ultimo_nome} tem interesse em permutar com seu imóvel.`,
+          conteudo: `${proposta.usuarios?.[0]?.primeiro_nome || 'Usuário'} ${proposta.usuarios?.[0]?.ultimo_nome || ''} tem interesse em permutar com seu imóvel.`,
           link: `/propostas/${propostaId}`,
           lida: false
         });
@@ -240,7 +240,7 @@ class PropostasService {
           user_id: proposta.user_origem_id,
           tipo: 'proposta',
           titulo: `Proposta ${resposta === 'aceita' ? 'aceita' : 'recusada'}`,
-          conteudo: `${proposta.usuarios.primeiro_nome} ${resposta === 'aceita' ? 'aceitou' : 'recusou'} sua proposta de permuta para o imóvel "${proposta.imoveis.titulo}".`,
+          conteudo: `${proposta.usuarios?.[0]?.primeiro_nome || 'Usuário'} ${resposta === 'aceita' ? 'aceitou' : 'recusou'} sua proposta de permuta para o imóvel "${proposta.imoveis?.[0]?.titulo || 'imóvel'}".`,
           link: `/propostas/${propostaId}`,
           lida: false
         });
