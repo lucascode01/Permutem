@@ -92,7 +92,7 @@ export const mockDataGenerator = () => {
       quartos: 3,
       banheiros: 2,
       aceita_permuta: true,
-      status: 'aprovado',
+      status: 'ativo',
       data_cadastro: randomDate(25),
       destaque: true,
       imagens: [
@@ -117,7 +117,7 @@ export const mockDataGenerator = () => {
       quartos: 4,
       banheiros: 3,
       aceita_permuta: true,
-      status: 'aprovado',
+      status: 'ativo',
       data_cadastro: randomDate(18),
       destaque: true,
       imagens: [
@@ -143,7 +143,7 @@ export const mockDataGenerator = () => {
       quartos: 5,
       banheiros: 4,
       aceita_permuta: true,
-      status: 'aprovado',
+      status: 'ativo',
       data_cadastro: randomDate(12),
       destaque: true,
       imagens: [
