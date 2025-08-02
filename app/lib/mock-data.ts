@@ -150,73 +150,97 @@ export const mockDataGenerator = () => {
       titulo: 'Cobertura duplex em Ipanema',
       descricao: 'Luxuosa cobertura duplex com vista panorâmica, piscina privativa e acabamento de alto padrão.',
       tipo: 'apartamento',
-      localizacao: 'Rua Visconde de Pirajá, 300',
-      cidade: 'Rio de Janeiro',
-      estado: 'RJ',
-      pais: 'Brasil',
+      finalidade: 'ambos',
       preco: 4500000,
-      preco_usd: 790000,
       area: 350,
       quartos: 5,
       banheiros: 4,
-      aceita_permuta: true,
-      status: 'ativo',
-      data_cadastro: randomDate(12),
-      destaque: true,
-      imagens: [
+      vagas: 3,
+      endereco: {
+        cep: '22000-000',
+        logradouro: 'Rua Visconde de Pirajá',
+        numero: '300',
+        bairro: 'Ipanema',
+        cidade: 'Rio de Janeiro',
+        uf: 'RJ'
+      },
+      caracteristicas: ['Vista panorâmica', 'Piscina privativa', 'Acabamento alto padrão', 'Duplex'],
+      fotos: [
         '/images/imoveis/cobertura1.jpg',
         '/images/imoveis/cobertura2.jpg',
         '/images/imoveis/cobertura3.jpg'
-      ]
+      ],
+      status: 'ativo',
+      destaque: true,
+      interesses_permuta: ['casa', 'apartamento'],
+      visualizacoes: 300,
+      criado_em: randomDate(12),
+      atualizado_em: randomDate(1)
     },
     {
       id: '4',
-      usuario_id: '3',
+      user_id: '3',
       titulo: 'Terreno em área nobre de Florianópolis',
       descricao: 'Terreno plano em localização privilegiada, ideal para construção de casa de alto padrão.',
-      tipo: 'Terreno',
-      localizacao: 'Estrada do Jurerê, Km 5',
-      cidade: 'Florianópolis',
-      estado: 'SC',
-      pais: 'Brasil',
+      tipo: 'terreno',
+      finalidade: 'ambos',
       preco: 750000,
-      preco_usd: 130000,
       area: 1200,
       quartos: 0,
       banheiros: 0,
-      aceita_permuta: true,
-      status: 'aprovado',
-      data_cadastro: randomDate(30),
-      destaque: false,
-      imagens: [
+      vagas: 0,
+      endereco: {
+        cep: '88000-000',
+        logradouro: 'Estrada do Jurerê',
+        numero: 'Km 5',
+        bairro: 'Jurerê',
+        cidade: 'Florianópolis',
+        uf: 'SC'
+      },
+      caracteristicas: ['Terreno plano', 'Localização privilegiada', 'Ideal para construção'],
+      fotos: [
         '/images/imoveis/terreno1.jpg',
         '/images/imoveis/terreno2.jpg'
-      ]
+      ],
+      status: 'ativo',
+      destaque: false,
+      interesses_permuta: ['casa', 'apartamento'],
+      visualizacoes: 80,
+      criado_em: randomDate(30),
+      atualizado_em: randomDate(1)
     },
     {
       id: '5',
-      usuario_id: '4',
+      user_id: '4',
       titulo: 'Fazenda produtiva próxima a Ribeirão Preto',
       descricao: 'Fazenda com 50 hectares, casa sede, currais, estábulos e plantação de café.',
-      tipo: 'Rural',
-      localizacao: 'Rodovia SP-333, Km 45',
-      cidade: 'Ribeirão Preto',
-      estado: 'SP',
-      pais: 'Brasil',
+      tipo: 'rural',
+      finalidade: 'ambos',
       preco: 3800000,
-      preco_usd: 670000,
       area: 500000,
       quartos: 6,
       banheiros: 4,
-      aceita_permuta: true,
-      status: 'pendente',
-      data_cadastro: randomDate(5),
-      destaque: false,
-      imagens: [
+      vagas: 10,
+      endereco: {
+        cep: '14000-000',
+        logradouro: 'Rodovia SP-333',
+        numero: 'Km 45',
+        bairro: 'Zona Rural',
+        cidade: 'Ribeirão Preto',
+        uf: 'SP'
+      },
+      caracteristicas: ['Fazenda produtiva', 'Casa sede', 'Currais', 'Estábulos', 'Plantação de café'],
+      fotos: [
         '/images/imoveis/fazenda1.jpg',
         '/images/imoveis/fazenda2.jpg',
         '/images/imoveis/fazenda3.jpg'
-      ]
+      ],
+      status: 'ativo',
+      destaque: false,
+      interesses_permuta: ['casa', 'apartamento', 'terreno'],
+      visualizacoes: 50,
+      criado_em: randomDate(5),
+      atualizado_em: randomDate(1)
     }
   ];
 
@@ -224,8 +248,8 @@ export const mockDataGenerator = () => {
   const propostas: Proposta[] = [
     {
       id: '1',
-      usuario_origem_id: '2',
-      usuario_destino_id: '3',
+      user_origem_id: '2',
+      user_destino_id: '3',
       imovel_origem_id: '1',
       imovel_destino_id: '3',
       mensagem: 'Tenho interesse em permutar meu apartamento em Santos pela sua cobertura em Ipanema. Podemos conversar sobre valores e condições?',
@@ -235,8 +259,8 @@ export const mockDataGenerator = () => {
     },
     {
       id: '2',
-      usuario_origem_id: '3',
-      usuario_destino_id: '2',
+      user_origem_id: '3',
+      user_destino_id: '2',
       imovel_origem_id: '4',
       imovel_destino_id: '2',
       mensagem: 'Gostaria de propor uma permuta do meu terreno em Florianópolis pela sua casa em Campinas. Estou disposto a pagar a diferença.',
