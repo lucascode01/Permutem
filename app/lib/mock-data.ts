@@ -21,7 +21,8 @@ export const mockDataGenerator = () => {
       telefone: '(11) 99999-9999',
       data_registro: randomDate(60),
       status: 'ativo',
-      verificado: true
+      created_at: randomDate(60),
+      updated_at: randomDate(1)
     },
     {
       id: '2',
@@ -50,27 +51,26 @@ export const mockDataGenerator = () => {
     {
       id: '4',
       email: 'pedro@exemplo.com',
-      nome: 'Pedro',
-      sobrenome: 'Oliveira',
-      tipo: 'proprietario',
+      primeiro_nome: 'Pedro',
+      ultimo_nome: 'Oliveira',
+      tipo_usuario: 'proprietario',
       telefone: '(31) 96666-6666',
       data_registro: randomDate(15),
-      ultimo_login: randomDate(2),
       status: 'pendente',
-      verificado: false
+      created_at: randomDate(15),
+      updated_at: randomDate(2)
     },
     {
       id: '5',
       email: 'ana@exemplo.com',
-      nome: 'Ana',
-      sobrenome: 'Pereira',
-      tipo: 'proprietario',
+      primeiro_nome: 'Ana',
+      ultimo_nome: 'Pereira',
+      tipo_usuario: 'proprietario',
       telefone: '(41) 95555-5555',
       data_registro: randomDate(10),
-      ultimo_login: randomDate(1),
       status: 'bloqueado',
-      verificado: true,
-      plano_id: '1'
+      created_at: randomDate(10),
+      updated_at: randomDate(1)
     }
   ];
 
@@ -81,7 +81,7 @@ export const mockDataGenerator = () => {
       usuario_id: '2',
       titulo: 'Apartamento com vista para o mar em Santos',
       descricao: 'Lindo apartamento com 3 quartos, vista para o mar, próximo à praia e ao comércio local.',
-      tipo: 'Apartamento',
+      tipo: 'apartamento',
       localizacao: 'Av. da Praia, 1000',
       cidade: 'Santos',
       estado: 'SP',
@@ -106,7 +106,7 @@ export const mockDataGenerator = () => {
       usuario_id: '2',
       titulo: 'Casa em condomínio fechado em Campinas',
       descricao: 'Casa espaçosa em condomínio fechado com total segurança, área de lazer completa e muito espaço verde.',
-      tipo: 'Casa',
+      tipo: 'casa',
       localizacao: 'Rua das Palmeiras, 500, Condomínio Green Valley',
       cidade: 'Campinas',
       estado: 'SP',
@@ -132,7 +132,7 @@ export const mockDataGenerator = () => {
       usuario_id: '3',
       titulo: 'Cobertura duplex em Ipanema',
       descricao: 'Luxuosa cobertura duplex com vista panorâmica, piscina privativa e acabamento de alto padrão.',
-      tipo: 'Cobertura',
+      tipo: 'apartamento',
       localizacao: 'Rua Visconde de Pirajá, 300',
       cidade: 'Rio de Janeiro',
       estado: 'RJ',
