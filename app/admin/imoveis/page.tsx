@@ -120,7 +120,7 @@ export default function ImoveisAdminPage() {
   const tiposImoveis = Array.from(new Set(imoveisProcessados.map(imovel => imovel.tipo)));
 
   // Alterar status do imóvel no Supabase
-  const handleAlterarStatus = async (id: string, novoStatus: 'aprovado' | 'pendente' | 'reprovado' | 'pausado') => {
+  const handleAlterarStatus = async (id: string, novoStatus: 'ativo' | 'inativo' | 'vendido' | 'permutado') => {
     try {
       setProcessandoAcao(`status-${id}`);
       // Mapear os status da interface para os status do tipo Imovel
@@ -270,14 +270,14 @@ export default function ImoveisAdminPage() {
                 </div>
                 <div className="flex justify-between py-2 border-b">
                   <span className="text-gray-600">Data de Cadastro</span>
-                  <span className="font-medium">{formatarData(imovelSelecionado.data_cadastro)}</span>
+                  <span className="font-medium">{formatarData(imovelSelecionado.data_cadastro || '')}</span>
                 </div>
                 <div className="flex justify-between py-2 border-b">
                   <span className="text-gray-600">Status</span>
                   <span className={`font-medium ${
-                    imovelSelecionado.status === 'aprovado' ? 'text-green-600' : 
-                    imovelSelecionado.status === 'pendente' ? 'text-yellow-600' : 
-                    imovelSelecionado.status === 'reprovado' ? 'text-red-600' : 'text-gray-600'
+                    imovelSelecionado.status === 'ativo' ? 'text-green-600' : 
+                    imovelSelecionado.status === 'inativo' ? 'text-yellow-600' : 
+                    imovelSelecionado.status === 'vendido' ? 'text-red-600' : 'text-gray-600'
                   }`}>
                     {imovelSelecionado.status.charAt(0).toUpperCase() + imovelSelecionado.status.slice(1)}
                   </span>
@@ -298,40 +298,40 @@ export default function ImoveisAdminPage() {
 
               <div className="flex flex-wrap gap-2 mt-6">
                 <button
-                  onClick={() => handleAlterarStatus(imovelSelecionado.id, 'aprovado')}
-                  disabled={processandoAcao === `status-${imovelSelecionado.id}` || imovelSelecionado.status === 'aprovado'}
+                  onClick={() => handleAlterarStatus(imovelSelecionado.id, 'ativo')}
+                  disabled={processandoAcao === `status-${imovelSelecionado.id}` || imovelSelecionado.status === 'ativo'}
                   className={`px-3 py-2 rounded ${
-                    imovelSelecionado.status === 'aprovado' ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-green-500 hover:bg-green-600 text-white'
+                    imovelSelecionado.status === 'ativo' ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-green-500 hover:bg-green-600 text-white'
                   } flex items-center`}
                 >
-                  <FaCheckCircle className="mr-1" /> {processandoAcao === `status-${imovelSelecionado.id}` ? 'Processando...' : 'Aprovar'}
+                  <FaCheckCircle className="mr-1" /> {processandoAcao === `status-${imovelSelecionado.id}` ? 'Processando...' : 'Ativar'}
                 </button>
                 <button
-                  onClick={() => handleAlterarStatus(imovelSelecionado.id, 'pendente')}
-                  disabled={processandoAcao === `status-${imovelSelecionado.id}` || imovelSelecionado.status === 'pendente'}
+                  onClick={() => handleAlterarStatus(imovelSelecionado.id, 'inativo')}
+                  disabled={processandoAcao === `status-${imovelSelecionado.id}` || imovelSelecionado.status === 'inativo'}
                   className={`px-3 py-2 rounded ${
-                    imovelSelecionado.status === 'pendente' ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-yellow-500 hover:bg-yellow-600 text-white'
+                    imovelSelecionado.status === 'inativo' ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-yellow-500 hover:bg-yellow-600 text-white'
                   } flex items-center`}
                 >
-                  <FaFilter className="mr-1" /> {processandoAcao === `status-${imovelSelecionado.id}` ? 'Processando...' : 'Pendente'}
+                  <FaFilter className="mr-1" /> {processandoAcao === `status-${imovelSelecionado.id}` ? 'Processando...' : 'Inativar'}
                 </button>
                 <button
-                  onClick={() => handleAlterarStatus(imovelSelecionado.id, 'reprovado')}
-                  disabled={processandoAcao === `status-${imovelSelecionado.id}` || imovelSelecionado.status === 'reprovado'}
+                  onClick={() => handleAlterarStatus(imovelSelecionado.id, 'vendido')}
+                  disabled={processandoAcao === `status-${imovelSelecionado.id}` || imovelSelecionado.status === 'vendido'}
                   className={`px-3 py-2 rounded ${
-                    imovelSelecionado.status === 'reprovado' ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-red-500 hover:bg-red-600 text-white'
+                    imovelSelecionado.status === 'vendido' ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-red-500 hover:bg-red-600 text-white'
                   } flex items-center`}
                 >
-                  <FaTimesCircle className="mr-1" /> {processandoAcao === `status-${imovelSelecionado.id}` ? 'Processando...' : 'Reprovar'}
+                  <FaTimesCircle className="mr-1" /> {processandoAcao === `status-${imovelSelecionado.id}` ? 'Processando...' : 'Marcar como Vendido'}
                 </button>
                 <button
-                  onClick={() => handleAlterarStatus(imovelSelecionado.id, 'pausado')}
-                  disabled={processandoAcao === `status-${imovelSelecionado.id}` || imovelSelecionado.status === 'pausado'}
+                  onClick={() => handleAlterarStatus(imovelSelecionado.id, 'permutado')}
+                  disabled={processandoAcao === `status-${imovelSelecionado.id}` || imovelSelecionado.status === 'permutado'}
                   className={`px-3 py-2 rounded ${
-                    imovelSelecionado.status === 'pausado' ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-gray-500 hover:bg-gray-600 text-white'
+                    imovelSelecionado.status === 'permutado' ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-gray-500 hover:bg-gray-600 text-white'
                   } flex items-center`}
                 >
-                  <FaBan className="mr-1" /> {processandoAcao === `status-${imovelSelecionado.id}` ? 'Processando...' : 'Pausar'}
+                  <FaBan className="mr-1" /> {processandoAcao === `status-${imovelSelecionado.id}` ? 'Processando...' : 'Marcar como Permutado'}
                 </button>
                 <button
                   onClick={() => handleAlternarDestaque(imovelSelecionado.id, imovelSelecionado.destaque || false)}

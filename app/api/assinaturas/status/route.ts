@@ -1,63 +1,80 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { NextRequest, NextResponse } from 'next/server';
+import { supabaseUrl, supabaseAnonKey } from '@/app/lib/supabase';
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-
-    if (!userId) {
-      return NextResponse.json({ error: 'userId é obrigatório' }, { status: 400 });
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    
+    // Verificar se o usuário está autenticado
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError || !session) {
+      return NextResponse.json(
+        { error: 'Não autorizado' },
+        { status: 401 }
+      );
     }
 
-    // Criar cliente Supabase diretamente
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-    // Buscar informações da assinatura no Supabase
-    const { data: assinatura, error } = await supabase
+    // Buscar assinatura ativa do usuário
+    const { data: assinatura, error: assinaturaError } = await supabase
       .from('assinaturas')
-      .select('*, planos(*)')
-      .eq('usuario_id', userId)
-      .eq('status', 'ACTIVE')
-      .order('criado_em', { ascending: false })
-      .limit(1)
+      .select('*')
+      .eq('user_id', session.user.id)
+      .eq('status', 'active')
       .single();
 
-    if (error && error.code !== 'PGRST116') { // PGRST116 = not found
-      console.error('Erro ao buscar assinatura:', error);
-      return NextResponse.json({ error: 'Erro ao buscar assinatura' }, { status: 500 });
+    if (assinaturaError && assinaturaError.code !== 'PGRST116') {
+      console.error('Erro ao buscar assinatura:', assinaturaError);
+      return NextResponse.json(
+        { error: 'Erro ao verificar assinatura' },
+        { status: 500 }
+      );
     }
 
-    // Se não encontrou assinatura ativa
+    // Se não há assinatura ativa
     if (!assinatura) {
       return NextResponse.json({
-        active: false
+        status: 'inactive',
+        message: 'Nenhuma assinatura ativa encontrada'
       });
     }
 
-    // Verificar se a assinatura expirou (para pagamentos únicos)
-    const agora = new Date();
-    const expiracao = assinatura.expiracao ? new Date(assinatura.expiracao) : null;
+    // Verificar se a assinatura não está vencida
+    const hoje = new Date();
+    const proximoVencimento = new Date(assinatura.proximo_vencimento);
     
-    if (expiracao && agora > expiracao) {
+    if (proximoVencimento < hoje) {
+      // Atualizar status da assinatura para vencida
+      await supabase
+        .from('assinaturas')
+        .update({ status: 'expired' })
+        .eq('id', assinatura.id);
+
       return NextResponse.json({
-        active: false,
-        planoId: assinatura.plano_id,
-        expiracao: assinatura.expiracao
+        status: 'expired',
+        message: 'Assinatura vencida'
       });
     }
 
-    // Retornar dados da assinatura
     return NextResponse.json({
-      active: true,
-      planoId: assinatura.plano_id,
-      expiracao: assinatura.expiracao,
-      asaasId: assinatura.asaas_id
+      status: 'active',
+      assinatura: {
+        id: assinatura.id,
+        plano_id: assinatura.plano_id,
+        valor: assinatura.valor,
+        periodo_cobranca: assinatura.periodo_cobranca,
+        proximo_vencimento: assinatura.proximo_vencimento,
+        renovacao_automatica: assinatura.renovacao_automatica
+      }
     });
-  } catch (error) {
+
+  } catch (error: any) {
     console.error('Erro ao verificar status da assinatura:', error);
-    return NextResponse.json({ error: 'Erro interno' }, { status: 500 });
+    
+    return NextResponse.json(
+      { error: 'Erro interno do servidor' },
+      { status: 500 }
+    );
   }
 } 

@@ -26,8 +26,8 @@ export type Database = {
           criado_em: string;
         };
         Insert: {
-  id: string;
-  email: string;
+          id: string;
+          email: string;
           primeiro_nome: string;
           ultimo_nome: string;
           tipo_usuario?: string;
@@ -35,8 +35,8 @@ export type Database = {
       };
       assinaturas: {
         Row: {
-  id: string;
-  usuario_id: string;
+          id: string;
+          usuario_id: string;
           plano_id: string;
           status: string;
           asaas_id: string;
@@ -46,11 +46,11 @@ export type Database = {
       };
       planos: {
         Row: {
-  id: string;
-  nome: string;
+          id: string;
+          nome: string;
           valor: number;
           intervalo: string;
-  ativo: boolean;
+          ativo: boolean;
         };
       };
     };
@@ -71,8 +71,9 @@ export const createSupabaseAdminClient = () => {
   return createClient<Database>(supabaseUrl, supabaseServiceKey);
 };
 
-// Criar o cliente Supabase
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Importar o cliente Supabase configurado
+import { supabase } from './supabase-client';
+export { supabase };
 
 // Adicionar verificação para ambiente de desenvolvimento
 if (process.env.NODE_ENV === 'development' && (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)) {

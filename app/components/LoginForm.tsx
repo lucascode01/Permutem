@@ -8,11 +8,11 @@ import { FaApple, FaGoogle, FaFacebook, FaEnvelope, FaEye, FaEyeSlash } from 're
 import { toast } from 'react-hot-toast';
 import PageHeader from './PageHeader';
 import HydrationFix from './HydrationFix';
-import { useAuth } from '@/app/contexts/AuthContext';
+import { useAuth } from '@/app/hooks/useAuth';
 
 const LoginForm = () => {
   const router = useRouter();
-  const { signIn, signInWithProvider, loading } = useAuth();
+  const { signInWithRedirect, signInWithProvider, loading } = useAuth();
   const [showLoginForm, setShowLoginForm] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
@@ -41,23 +41,7 @@ const LoginForm = () => {
     
     try {
       console.log('Tentando fazer login com:', email);
-      const { error } = await signIn(email, password);
-      
-      if (error) {
-        console.error('Erro de login:', error);
-        if (error.message.includes('Invalid login credentials')) {
-          toast.error('Credenciais inválidas. Verifique seu email e senha.');
-        } else if (error.message.includes('Email not confirmed')) {
-          toast.error('Email não confirmado. Verifique sua caixa de entrada ou spam.');
-        } else {
-          toast.error(error.message || 'Erro ao fazer login');
-        }
-        return;
-      }
-      
-      console.log('Login bem-sucedido');
-      toast.success('Login realizado com sucesso!');
-      router.push('/dashboard');
+      await signInWithRedirect(email, password);
     } catch (err) {
       console.error('Erro ao fazer login:', err);
       toast.error('Ocorreu um erro. Tente novamente mais tarde.');

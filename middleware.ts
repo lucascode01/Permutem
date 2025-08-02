@@ -1,0 +1,104 @@
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+
+export async function middleware(req: NextRequest) {
+  const res = NextResponse.next();
+  const { pathname } = req.nextUrl;
+
+  // Rotas públicas que não precisam de autenticação
+  const publicRoutes = [
+    '/',
+    '/login',
+    '/cadastro',
+    '/recuperar-senha',
+    '/redefinir-senha',
+    '/verificacao-email',
+    '/como-funciona',
+    '/ajuda',
+    '/termos',
+    '/privacidade',
+    '/faq',
+    '/api/auth/callback',
+    '/api/auth/register',
+    '/api/auth/reset-password',
+  ];
+
+  // Rotas que precisam de autenticação
+  const protectedRoutes = [
+    '/dashboard',
+    '/perfil',
+    '/anuncios',
+    '/mensagens',
+    '/favoritos',
+    '/notificacoes',
+    '/propostas',
+    '/sugestoes',
+    '/estatisticas',
+    '/checkout',
+    '/checkout-success',
+    '/checkout-upgrade',
+    '/selecionar-plano',
+    '/planos',
+  ];
+
+  // Rotas administrativas
+  const adminRoutes = [
+    '/admin',
+    '/admin/dashboard',
+    '/admin/usuarios',
+    '/admin/imoveis',
+    '/admin/propostas',
+    '/admin/mensagens',
+    '/admin/financeiro',
+    '/admin/planos',
+    '/admin/configuracoes',
+  ];
+
+  // Verificar se é uma rota pública
+  const isPublicRoute = publicRoutes.some(route => 
+    pathname === route || pathname.startsWith(route + '/')
+  );
+
+  // Verificar se é uma rota protegida
+  const isProtectedRoute = protectedRoutes.some(route => 
+    pathname === route || pathname.startsWith(route + '/')
+  );
+
+  // Verificar se é uma rota administrativa
+  const isAdminRoute = adminRoutes.some(route => 
+    pathname === route || pathname.startsWith(route + '/')
+  );
+
+  // Para desenvolvimento, permitir acesso a todas as rotas
+  // Em produção, você pode adicionar verificação de autenticação aqui
+  if (process.env.NODE_ENV === 'development') {
+    return res;
+  }
+
+  // Se não há sessão e a rota é protegida, redirecionar para login
+  if (isProtectedRoute) {
+    const redirectUrl = new URL('/login', req.url);
+    redirectUrl.searchParams.set('redirect', pathname);
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  // Se há sessão mas está tentando acessar páginas de login/cadastro, redirecionar para dashboard
+  if (pathname === '/login' || pathname === '/cadastro') {
+    return NextResponse.redirect(new URL('/dashboard', req.url));
+  }
+
+  return res;
+}
+
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public folder
+     */
+    '/((?!_next/static|_next/image|favicon.ico|public/).*)',
+  ],
+}; 

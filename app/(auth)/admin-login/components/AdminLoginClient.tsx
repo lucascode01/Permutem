@@ -37,11 +37,11 @@ const AdminLoginForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   
   const router = useRouter();
-  const { login, user } = useAuth();
+  const { signIn, user } = useAuth();
 
   // Verificar se já está logado
   useEffect(() => {
-    if (user && user.userType === 'admin') {
+    if (user && user.user_metadata?.tipo_usuario === 'admin') {
       router.push('/admin');
     }
   }, [user, router]);
@@ -63,9 +63,14 @@ const AdminLoginForm = () => {
     const rememberMe = formData.get('rememberMe') === 'on';
     
     try {
-      const success = await login(email, password, rememberMe);
+      const { data, error } = await signIn(email, password);
       
-      if (success) {
+      if (error) {
+        setError('E-mail ou senha incorretos. Por favor, tente novamente.');
+        return;
+      }
+      
+      if (data?.user) {
         router.push('/admin');
       } else {
         setError('E-mail ou senha incorretos. Por favor, tente novamente.');
