@@ -99,6 +99,7 @@ const LoginForm = () => {
               {!showLoginForm ? (
                 <>
                   <div className="space-y-3">
+                    {/* Temporariamente desabilitado até configurar no Supabase
                     <button 
                       onClick={() => handleSocialLogin('apple')}
                       className="w-full flex items-center justify-center py-3 px-4 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -125,6 +126,7 @@ const LoginForm = () => {
                       <FaFacebook className="h-5 w-5 mr-3 text-[#3b5998]" />
                       <span>Entrar com Facebook</span>
                     </button>
+                    */}
 
                     <button 
                       onClick={handleEmailLoginClick}
