@@ -1,5 +1,9 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next();
@@ -21,6 +25,8 @@ export async function middleware(req: NextRequest) {
     '/api/auth/callback',
     '/api/auth/register',
     '/api/auth/reset-password',
+    '/api/webhooks',
+    '/api/supabase',
   ];
 
   // Rotas que precisam de autenticação
@@ -70,14 +76,14 @@ export async function middleware(req: NextRequest) {
   );
 
   // Para desenvolvimento, permitir acesso a todas as rotas
-  // Em produção, você pode adicionar verificação de autenticação aqui
   if (process.env.NODE_ENV === 'development') {
     return res;
   }
 
   // Verificar se há token de autenticação
-  const token = req.cookies.get('sb-access-token')?.value;
-  const hasSession = !!token;
+  const accessToken = req.cookies.get('sb-access-token')?.value;
+  const refreshToken = req.cookies.get('sb-refresh-token')?.value;
+  const hasSession = !!(accessToken || refreshToken);
 
   // Se não há sessão e a rota é protegida, redirecionar para login
   if (!hasSession && isProtectedRoute) {
@@ -89,6 +95,13 @@ export async function middleware(req: NextRequest) {
   // Se há sessão mas está tentando acessar páginas de login/cadastro, redirecionar para dashboard
   if (hasSession && (pathname === '/login' || pathname === '/cadastro')) {
     return NextResponse.redirect(new URL('/dashboard', req.url));
+  }
+
+  // Para rotas administrativas, verificar se é admin (isso será feito no componente)
+  if (isAdminRoute && !hasSession) {
+    const redirectUrl = new URL('/login', req.url);
+    redirectUrl.searchParams.set('redirect', pathname);
+    return NextResponse.redirect(redirectUrl);
   }
 
   return res;
