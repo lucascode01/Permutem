@@ -75,15 +75,19 @@ export async function middleware(req: NextRequest) {
     return res;
   }
 
+  // Verificar se há token de autenticação
+  const token = req.cookies.get('sb-access-token')?.value;
+  const hasSession = !!token;
+
   // Se não há sessão e a rota é protegida, redirecionar para login
-  if (isProtectedRoute) {
+  if (!hasSession && isProtectedRoute) {
     const redirectUrl = new URL('/login', req.url);
     redirectUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(redirectUrl);
   }
 
   // Se há sessão mas está tentando acessar páginas de login/cadastro, redirecionar para dashboard
-  if (pathname === '/login' || pathname === '/cadastro') {
+  if (hasSession && (pathname === '/login' || pathname === '/cadastro')) {
     return NextResponse.redirect(new URL('/dashboard', req.url));
   }
 
